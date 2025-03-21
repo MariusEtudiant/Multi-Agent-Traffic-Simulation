@@ -22,6 +22,7 @@ public class BeliefInitial {
                 .anyMatch(b -> b.getName().equals(name) && b.getValue().equals(value));
     }
     public void updateBeliefs(Environment env, Vehicle vehicle) {
+        beliefs.clear();
         // Exemple : Mettre à jour les croyances en fonction des feux de circulation
         if (env.isTrafficLightGreen("IntersectionA")) {
             addBelief(new Belief("FeuVert", true));
@@ -35,6 +36,7 @@ public class BeliefInitial {
         } else {
             addBelief(new Belief("CarAhead", false));
         }
+        System.out.println("Croyances mises à jour : " + beliefs);
     }
     @Override
     public String toString() {

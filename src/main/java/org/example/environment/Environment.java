@@ -28,11 +28,19 @@ public class Environment {
     public void addTrafficLight(TrafficLight trafficLight){
         trafficLights.add(trafficLight);
     }
+    public double getSafeDistance() {
+        return SAFE_DISTANCE;
+    }
 
     public boolean isTrafficLightGreen(String intersectionId) {
-        return trafficLights.stream()
-                .filter(tl -> tl.getId().equals(intersectionId))
-                .anyMatch(tl -> tl.getState().equals("GREEN"));
+        for (TrafficLight trafficLight : trafficLights) {
+            if (trafficLight.getId().equals(intersectionId)) {
+                System.out.println("Feu de circulation " + intersectionId + " est " + trafficLight.getState());
+                return trafficLight.getState().equals("GREEN");
+            }
+        }
+        System.out.println("Feu de circulation " + intersectionId + " non trouvé.");
+        return false;
     }
 
     public boolean isCarAhead(Vehicle vehicle) {
@@ -40,10 +48,12 @@ public class Environment {
             if (!other.equals(vehicle)) {
                 double distance = vehicle.getPosition().distanceTo(other.getPosition());
                 if (distance < SAFE_DISTANCE) {
+                    System.out.println("Véhicule détecté devant : " + other + " à une distance de " + distance);
                     return true;
                 }
             }
         }
+        System.out.println("Aucun véhicule détecté devant.");
         return false;
     }
 

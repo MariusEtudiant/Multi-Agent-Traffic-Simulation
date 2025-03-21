@@ -1,5 +1,9 @@
 package org.example.agent;
 import org.example.environment.Environment;
+import org.example.logic.AndFormula;
+import org.example.logic.AtomFormula;
+import org.example.logic.LogicalFormula;
+import org.example.logic.NotFormula;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,31 +45,39 @@ public class Vehicle {
     }
     public boolean isCollisionImminent(Environment env){
         for(Vehicle other : env.getVehicles()) {
-            if (!this.equals(other) && isTooClose(other)) {
+            if (!this.equals(other) && isTooClose(other, env)) {
                 return true;
             }
         }
         return false;
     }
+
+    private boolean isTooClose(Vehicle other, Environment env) {
+        double distance = this.position.distanceTo(other.getPosition());
+        return distance < env.getSafeDistance();
+    }
     public List<Intention> getIntentions() {
         return intentions;
-    }
-    public boolean isTooClose(Vehicle other){
-        return this.position.distanceTo(other.getPosition()) < SAFE_DISTANCE;
     }
     public void decideNextAction(Environment env) {
         intentions.clear(); // Réinitialiser les intentions
 
-        if (isCollisionImminent(env)) {
-            addIntention(Intention.SLOW_DOWN);
-        } else if (beliefs.contains("FeuVert", true)) {
+        LogicalFormula feuVert = new AtomFormula("FeuVert", true);
+        LogicalFormula carAhead = new AtomFormula("CarAhead", true);
+        LogicalFormula canAccelerate = new AndFormula(feuVert,new NotFormula(carAhead)); // feuvert et non voiture devant
+        // Évaluer les conditions
+        if (canAccelerate.evaluate(beliefs)) {
+            System.out.println("Condition : canAccelerate -> ACCELERATE");
             addIntention(Intention.ACCELERATE);
-        } else if (beliefs.contains("FeuRouge", true)) {
-            addIntention(Intention.STOP);
-        } else if (beliefs.contains("CarAhead", true)) {
-            addIntention(Intention.TURN_LEFT); // Essayer de changer de voie
+        } else if (carAhead.evaluate(beliefs)) {
+            System.out.println("Condition : carAhead -> SLOW_DOWN");
+            addIntention(Intention.SLOW_DOWN);
+        } else if (feuVert.evaluate(beliefs)) {
+            System.out.println("Condition : feuVert -> ACCELERATE");
+            addIntention(Intention.ACCELERATE);
         } else {
-            addIntention(Intention.ACCELERATE); // Continuer tout droit
+            System.out.println("Condition : default -> STOP");
+            addIntention(Intention.STOP);
         }
     }
     public void act() {
@@ -79,6 +91,9 @@ public class Vehicle {
                     break;
                 case TURN_LEFT:
                     position = new Position(position.getX(), position.getY() - 1); // Tourner à gauche
+                    break;
+                case TURN_RIGHT:
+                    position = new Position(position.getX(), position.getY() + 1); // Tourner à droite
                     break;
                 // Ajoutez d'autres cas si nécessaire
             }

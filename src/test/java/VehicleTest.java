@@ -36,7 +36,7 @@ public class VehicleTest {
     public void testCollisionAvoidance() {
         Environment env = new Environment();
         Vehicle vehicle1 = new Vehicle(new Position(0, 0));
-        Vehicle vehicle2 = new Vehicle(new Position(5, 5));
+        Vehicle vehicle2 = new Vehicle(new Position(1, 1));
         env.addVehicle(vehicle1);
         env.addVehicle(vehicle2);
 
