@@ -1,0 +1,123 @@
+@startuml
+' Définition des classes principales
+class Vehicle {
+    - BeliefInitial beliefs
+    - List<Desire> desires
+    - List<Intention> intentions
+    - Position position
+    + void perceive(Environment env)
+    + void updateDesires()
+    + void executeIntentions()
+}
+
+class BeliefInitial {
+    - Set<Belief> beliefs
+    + void updateBeliefs(Environment env)
+    + void addBelief(Belief belief)
+    + boolean contains(String name, Object value)
+}
+
+class Belief {
+    - String name
+    - Object value
+}
+
+class Desire {
+    - String name
+    - LogicalFormula condition
+    + boolean isAchieved(BeliefInitial beliefs)
+}
+
+class Intention {
+    <<enumeration>>
+    ACCELERATE
+    TURN_LEFT
+    STOP
+    REROUTE
+    TURN_RIGHT
+}
+
+class Action {
+    + void execute(Vehicle vehicle)
+}
+
+class Environment {
+    - int[][] grid
+    - List<Vehicle> vehicles
+    - List<TrafficLight> trafficLights
+    - List<Intersection> intersections
+    + void update()
+}
+
+class TrafficLight {
+    - String state
+    - String id
+    + boolean isRed()
+    + boolean isGreen()
+}
+
+class Intersection {
+    - List<Position> entryPoints
+    - List<Position> exitPoints
+    - TrafficLight[] lights
+    + boolean canPass(Vehicle vehicle)
+}
+
+interface LogicalFormula {
+    + boolean evaluate(BeliefInitial beliefs)
+}
+
+class AndFormula {
+    - LogicalFormula left
+    - LogicalFormula right
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class NotFormula {
+    - LogicalFormula formula
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class OrFormula {
+    - LogicalFormula left
+    - LogicalFormula right
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class AtomFormula {
+    - String name
+    - Object value
+    + AtomFormula(String name, Object value)
+    + boolean evaluate(BeliefInitial beliefs)
+}
+
+class Position {
+    - int x
+    - int y
+}
+
+' Relations entre les classes
+Vehicle "1" *-- "1" BeliefInitial : possède
+BeliefInitial "1" *-- "many" Belief : contient
+Vehicle "1" *-- "many" Desire : possède
+Vehicle "1" *-- "many" Intention : possède
+Vehicle "1" *-- "1" Position : est localisé à
+Environment "1" *-- "many" Vehicle : contient
+Environment "1" *-- "many" TrafficLight : contient
+Environment "1" *-- "many" Intersection : contient
+Intersection "1" *-- "many" TrafficLight : régule
+LogicalFormula <|-- AndFormula : implémente
+LogicalFormula <|-- NotFormula : implémente
+LogicalFormula <|-- OrFormula : implémente
+LogicalFormula <|-- AtomFormula : implémente
+BeliefInitial "1" --> "many" LogicalFormula : utilise pour évaluer
+Desire "1" *-- "1" LogicalFormula : basé sur
+Vehicle "1" --> "many" Action : exécute
+
+' Ajouter des notes pour clarifier
+note top of Vehicle : Un agent autonome suivant le modèle BDI
+note top of BeliefInitial : Stocke et met à jour les croyances du véhicule
+note top of LogicalFormula : Interface pour la logique de raisonnement BDI
+note top of Intersection : Représente une intersection avec feux de circulation
+
+' Amélioration du style pour la lisibilité
+hide empty members
+skinparam classAttributeIconSize 0
+@enduml

@@ -36,6 +36,17 @@ public class BeliefInitial {
         } else {
             addBelief(new Belief("CarAhead", false));
         }
+
+        if (env.isCarBehind(vehicle)){
+            addBelief(new Belief("CarBehind", true));
+        }else {
+            addBelief(new Belief("CarBehind", false));
+        }
+        if(env.isObstacleAhead(vehicle)){
+            addBelief(new Belief("ObstacleAhead", true));
+        }else{
+            addBelief(new Belief("ObstacleAhead", false));
+        }
         System.out.println("Croyances mises à jour : " + beliefs);
     }
     @Override

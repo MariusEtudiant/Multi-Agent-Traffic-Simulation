@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.agent.Vehicle;
 import org.example.environment.Environment;
+import org.example.environment.Obstacle;
 import org.example.environment.TrafficLight;
 import org.example.agent.Position;
 
@@ -20,7 +21,12 @@ public class Main {
         env.addVehicle(vehicle1);
         env.addVehicle(vehicle2);
 
-        for (int i = 0; i < 10; i++) {
+        Obstacle obstacle1 = new Obstacle(new Position(7,0));
+        Obstacle obstacle2 = new Obstacle(new Position(20,0));
+        env.addObstacle(obstacle1);
+        env.addObstacle(obstacle2);
+
+        for (int i = 1; i < 10; i++) {
             System.out.println("=== Étape " + (i + 1) + " ===");
 
             // Alterner l'état des feux toutes les 2 étapes
