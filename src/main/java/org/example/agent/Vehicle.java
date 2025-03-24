@@ -1,5 +1,6 @@
 package org.example.agent;
 import org.example.environment.Environment;
+import org.example.environment.Road;
 import org.example.logic.AndFormula;
 import org.example.logic.AtomFormula;
 import org.example.logic.LogicalFormula;
@@ -31,8 +32,8 @@ public class Vehicle {
     public List<Desire> getDesires() {
         return desires;
     }
-    public void perceivedEnvironment(Environment env){
-        beliefs.updateBeliefs(env, this);
+    public void perceivedEnvironment(Road road){
+        beliefs.updateBeliefs(road, this);
     }
     public void addDesire(Desire desire) {
         desires.add(desire);
@@ -43,27 +44,22 @@ public class Vehicle {
     public void addIntention(Intention intention) {
         intentions.add(intention);
     }
-    public boolean isCollisionImminent(Environment env){
-        for(Vehicle other : env.getVehicles()) {
-            if (!this.equals(other) && isTooClose(other, env)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
-    private boolean isTooClose(Vehicle other, Environment env) {
+    private boolean isTooClose(Vehicle other, Road road) {
         double distance = this.position.distanceTo(other.getPosition());
-        return distance < env.getSafeDistance();
+        return distance < road.getSafeDistance();
     }
     public List<Intention> getIntentions() {
         return intentions;
     }
-    public void decideNextAction(Environment env) {
+    public void decideNextAction(Road road) {
         intentions.clear(); // Réinitialiser les intentions
 
         LogicalFormula feuVert = new AtomFormula("FeuVert", true);
         LogicalFormula carAhead = new AtomFormula("CarAhead", true);
+        LogicalFormula carOnLeft = new AtomFormula("CarOnLeft", true);
+        LogicalFormula carOnRight = new AtomFormula("CarOnRight", true);
+        LogicalFormula isObstacle = new AtomFormula("IsObstacle", true);
         LogicalFormula canAccelerate = new AndFormula(feuVert,new NotFormula(carAhead)); // feuvert et non voiture devant
         // Évaluer les conditions
         if (canAccelerate.evaluate(beliefs)) {
