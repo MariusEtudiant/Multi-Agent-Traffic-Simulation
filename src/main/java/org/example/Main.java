@@ -6,6 +6,7 @@ import org.example.environment.Obstacle;
 import org.example.environment.Road;
 import org.example.environment.TrafficLight;
 import org.example.agent.Position;
+import org.example.environment.Lane;
 
 import java.util.List;
 
@@ -18,18 +19,29 @@ public class Main {
         List<Position> entryPoints = List.of(new Position(0, 0), new Position(100, 0));
         Road road = new Road("R1", 100.0, 10, entryPoints);
 
+        // Créer une Lane (voie) associée à cette Road
+        Lane lane = new Lane("L1", 3.5, 0, road); // ID, largeur, direction (1 = vers l'avant)
+        Lane lane2 = new Lane("L2", 3.5, 180, road);
+        road.addLane(lane); // Supposons que Road a une méthode addLane()
+        road.addLane(lane2);
+
         // Ajouter un feu de circulation
         TrafficLight trafficLight = new TrafficLight("Road1", "GREEN");
-        road.addTrafficLight(trafficLight, new Position(95,0));
+        road.addTrafficLight(trafficLight, new Position(95, 0));
 
-        // Ajouter des véhicules
+        // Ajouter des véhicules à la Lane (au lieu de Road)
         Vehicle vehicle1 = new Vehicle(new Position(0, 0));
         Vehicle vehicle2 = new Vehicle(new Position(15, 0));
-        road.addVehicle(vehicle1);
-        road.addVehicle(vehicle2);
+        Vehicle vehicle3 = new Vehicle(new Position(2, 0));
+        Vehicle vehicle4 = new Vehicle(new Position(5, 0));
+        lane.addVehicle(vehicle1); // <-- Changé : addVehicle sur Lane, pas Road
+        lane.addVehicle(vehicle2);
+        lane2.addVehicle(vehicle3);
+        lane2.addVehicle(vehicle4);
 
-        Obstacle obstacle1 = new Obstacle(new Position(70,0));
-        road.addObstacle(obstacle1);
+        // Ajouter un obstacle à la Lane
+        Obstacle obstacle1 = new Obstacle(new Position(70, 0));
+        lane.addObstacle(obstacle1); // <-- Changé : addObstacle sur Lane
 
         System.out.println(road);  // "Road R1 (Length: 100.0, Vehicles: 2/10)"
         System.out.println("Congested? " + road.isCongested());  // false
@@ -45,8 +57,9 @@ public class Main {
                 }
             }
 
-            // Mettre à jour l'environnement
-            road.update();
+            // Mettre à jour l'environnement (désormais via Lane)
+            lane.update(); // <-- Changé : road.update() → lane.update()
+            lane2.update();
 
             // Afficher l'état des véhicules
             System.out.println("Véhicule 1 :");
@@ -59,9 +72,21 @@ public class Main {
             System.out.println(" - Intentions : " + vehicle2.getIntentions());
             System.out.println(" - Croyances : " + vehicle2.getBeliefs());
 
-            // Faire agir les véhicules
+            System.out.println("Véhicule 3 :");
+            System.out.println(" - Position : " + vehicle3.getPosition().getX() + ", " + vehicle3.getPosition().getY());
+            System.out.println(" - Intentions : " + vehicle3.getIntentions());
+            System.out.println(" - Croyances : " + vehicle3.getBeliefs());
+
+            System.out.println("Véhicule 4 :");
+            System.out.println(" - Position : " + vehicle4.getPosition().getX() + ", " + vehicle4.getPosition().getY());
+            System.out.println(" - Intentions : " + vehicle4.getIntentions());
+            System.out.println(" - Croyances : " + vehicle4.getBeliefs());
+
+            // Faire agir les véhicules (inchangé)
             vehicle1.act();
             vehicle2.act();
+            vehicle3.act();
+            vehicle4.act();
 
             // Attendre un peu pour simuler le temps réel
             try {

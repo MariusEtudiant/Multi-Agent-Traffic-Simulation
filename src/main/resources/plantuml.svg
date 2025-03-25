@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" contentStyleType="text/css" height="1365px" preserveAspectRatio="none" style="width:1523px;height:1365px;background:#FFFFFF;" version="1.1" viewBox="0 0 1523 1365" width="1523px" zoomAndPan="magnify"><defs/><g><!--MD5=[3aa0d89c6bfdcbf7f32042cedac57549]
+class Vehicle--><g id="elem_Vehicle"><rect codeLine="2" fill="#F1F1F1" height="178.375" id="Vehicle" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="241" x="230.5" y="578"/><ellipse cx="321.75" cy="594" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M324.7188,599.6406 Q324.1406,599.9375 323.5,600.0781 Q322.8594,600.2344 322.1563,600.2344 Q319.6563,600.2344 318.3281,598.5938 Q317.0156,596.9375 317.0156,593.8125 Q317.0156,590.6875 318.3281,589.0313 Q319.6563,587.375 322.1563,587.375 Q322.8594,587.375 323.5,587.5313 Q324.1563,587.6875 324.7188,587.9844 L324.7188,590.7031 Q324.0938,590.125 323.5,589.8594 Q322.9063,589.5781 322.2813,589.5781 Q320.9375,589.5781 320.25,590.6563 Q319.5625,591.7188 319.5625,593.8125 Q319.5625,595.9063 320.25,596.9844 Q320.9375,598.0469 322.2813,598.0469 Q322.9063,598.0469 323.5,597.7813 Q324.0938,597.5 324.7188,596.9219 L324.7188,599.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="50" x="342.25" y="598.8467">Vehicle</text><line style="stroke:#181818;stroke-width:0.5;" x1="231.5" x2="470.5" y1="610" y2="610"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="126" x="236.5" y="626.9951">-BeliefInitial beliefs</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="152" x="236.5" y="643.292">-List&lt;Desire&gt; desires</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="186" x="236.5" y="659.5889">-List&lt;Intention&gt; intentions</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="119" x="236.5" y="675.8857">-Position position</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="38" x="236.5" y="692.1826">etc ...</text><line style="stroke:#181818;stroke-width:0.5;" x1="231.5" x2="470.5" y1="699.4844" y2="699.4844"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="229" x="236.5" y="716.4795">+void perceive(Environment env)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="156" x="236.5" y="732.7764">+void updateDesires()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="179" x="236.5" y="749.0732">+void executeIntentions()</text></g><!--MD5=[d0167bf1ae4d3fa48456f985aecb4b19]
+class BeliefInitial--><g id="elem_BeliefInitial"><rect codeLine="13" fill="#F1F1F1" height="113.1875" id="BeliefInitial" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="329" x="441.5" y="841"/><ellipse cx="565.75" cy="857" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M568.7188,862.6406 Q568.1406,862.9375 567.5,863.0781 Q566.8594,863.2344 566.1563,863.2344 Q563.6563,863.2344 562.3281,861.5938 Q561.0156,859.9375 561.0156,856.8125 Q561.0156,853.6875 562.3281,852.0313 Q563.6563,850.375 566.1563,850.375 Q566.8594,850.375 567.5,850.5313 Q568.1563,850.6875 568.7188,850.9844 L568.7188,853.7031 Q568.0938,853.125 567.5,852.8594 Q566.9063,852.5781 566.2813,852.5781 Q564.9375,852.5781 564.25,853.6563 Q563.5625,854.7188 563.5625,856.8125 Q563.5625,858.9063 564.25,859.9844 Q564.9375,861.0469 566.2813,861.0469 Q566.9063,861.0469 567.5,860.7813 Q568.0938,860.5 568.7188,859.9219 L568.7188,862.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="72" x="586.25" y="861.8467">BeliefInitial</text><line style="stroke:#181818;stroke-width:0.5;" x1="442.5" x2="769.5" y1="873" y2="873"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="139" x="447.5" y="889.9951">-Set&lt;Belief&gt; beliefs</text><line style="stroke:#181818;stroke-width:0.5;" x1="442.5" x2="769.5" y1="897.2969" y2="897.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="265" x="447.5" y="914.292">+void updateBeliefs(Environment env)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="197" x="447.5" y="930.5889">+void addBelief(Belief belief)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="317" x="447.5" y="946.8857">+boolean contains(String name, Object value)</text></g><!--MD5=[54ff93ca0c41a757b15963357793f35c]
+class Belief--><g id="elem_Belief"><rect codeLine="20" fill="#F1F1F1" height="129.4844" id="Belief" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="102" x="509" y="1039"/><ellipse cx="538.4" cy="1055" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M541.3688,1060.6406 Q540.7906,1060.9375 540.15,1061.0781 Q539.5094,1061.2344 538.8063,1061.2344 Q536.3063,1061.2344 534.9781,1059.5938 Q533.6656,1057.9375 533.6656,1054.8125 Q533.6656,1051.6875 534.9781,1050.0313 Q536.3063,1048.375 538.8063,1048.375 Q539.5094,1048.375 540.15,1048.5313 Q540.8063,1048.6875 541.3688,1048.9844 L541.3688,1051.7031 Q540.7438,1051.125 540.15,1050.8594 Q539.5563,1050.5781 538.9313,1050.5781 Q537.5875,1050.5781 536.9,1051.6563 Q536.2125,1052.7188 536.2125,1054.8125 Q536.2125,1056.9063 536.9,1057.9844 Q537.5875,1059.0469 538.9313,1059.0469 Q539.5563,1059.0469 540.15,1058.7813 Q540.7438,1058.5 541.3688,1057.9219 L541.3688,1060.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="38" x="555.6" y="1059.8467">Belief</text><line style="stroke:#181818;stroke-width:0.5;" x1="510" x2="610" y1="1071" y2="1071"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="515" y="1087.9951">-String name</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="90" x="515" y="1104.292">-Object value</text><line style="stroke:#181818;stroke-width:0.5;" x1="510" x2="610" y1="1111.5938" y2="1111.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="68" x="515" y="1128.5889">+equals()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="85" x="515" y="1144.8857">+getName()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="515" y="1161.1826">+getValue()</text></g><!--MD5=[23918aa2b7eaa9efcd3fdb5a9340fcf1]
+class Desire--><g id="elem_Desire"><rect codeLine="28" fill="#F1F1F1" height="129.4844" id="Desire" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="151" x="1155.5" y="833"/><ellipse cx="1204.25" cy="849" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1207.2188,854.6406 Q1206.6406,854.9375 1206,855.0781 Q1205.3594,855.2344 1204.6563,855.2344 Q1202.1563,855.2344 1200.8281,853.5938 Q1199.5156,851.9375 1199.5156,848.8125 Q1199.5156,845.6875 1200.8281,844.0313 Q1202.1563,842.375 1204.6563,842.375 Q1205.3594,842.375 1206,842.5313 Q1206.6563,842.6875 1207.2188,842.9844 L1207.2188,845.7031 Q1206.5938,845.125 1206,844.8594 Q1205.4063,844.5781 1204.7813,844.5781 Q1203.4375,844.5781 1202.75,845.6563 Q1202.0625,846.7188 1202.0625,848.8125 Q1202.0625,850.9063 1202.75,851.9844 Q1203.4375,853.0469 1204.7813,853.0469 Q1205.4063,853.0469 1206,852.7813 Q1206.5938,852.5 1207.2188,851.9219 L1207.2188,854.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="45" x="1224.75" y="853.8467">Desire</text><line style="stroke:#181818;stroke-width:0.5;" x1="1156.5" x2="1305.5" y1="865" y2="865"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="1161.5" y="881.9951">-String name</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="139" x="1161.5" y="898.292">-boolean isAchieved</text><line style="stroke:#181818;stroke-width:0.5;" x1="1156.5" x2="1305.5" y1="905.5938" y2="905.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="85" x="1161.5" y="922.5889">+getName()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="1161.5" y="938.8857">+isAhieved()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="98" x="1161.5" y="955.1826">+setAchived()</text></g><!--MD5=[79f41604efc496a4fca29a65bee9717b]
+class Intention--><g id="elem_Intention"><rect codeLine="36" fill="#F1F1F1" height="121.4844" id="Intention" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="118" x="142" y="837"/><ellipse cx="168.25" cy="853" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M171.2188,858.6406 Q170.6406,858.9375 170,859.0781 Q169.3594,859.2344 168.6563,859.2344 Q166.1563,859.2344 164.8281,857.5938 Q163.5156,855.9375 163.5156,852.8125 Q163.5156,849.6875 164.8281,848.0313 Q166.1563,846.375 168.6563,846.375 Q169.3594,846.375 170,846.5313 Q170.6563,846.6875 171.2188,846.9844 L171.2188,849.7031 Q170.5938,849.125 170,848.8594 Q169.4063,848.5781 168.7813,848.5781 Q167.4375,848.5781 166.75,849.6563 Q166.0625,850.7188 166.0625,852.8125 Q166.0625,854.9063 166.75,855.9844 Q167.4375,857.0469 168.7813,857.0469 Q169.4063,857.0469 170,856.7813 Q170.5938,856.5 171.2188,855.9219 L171.2188,858.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="61" x="184.75" y="857.8467">Intention</text><line style="stroke:#181818;stroke-width:0.5;" x1="143" x2="259" y1="869" y2="869"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="106" x="148" y="885.9951">«enumeration»</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91" x="148" y="902.292">ACCELERATE</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="79" x="148" y="918.5889">TURN_LEFT</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="38" x="148" y="934.8857">STOP</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="89" x="148" y="951.1826">TURN_RIGHT</text></g><!--MD5=[5d0a77e8f66918aa15fe0099dd6d4ba9]
+class Environment--><g id="elem_Environment"><rect codeLine="44" fill="#F1F1F1" height="56.2969" id="Environment" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="119" x="182.5" y="7"/><ellipse cx="197.5" cy="23" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M200.4688,28.6406 Q199.8906,28.9375 199.25,29.0781 Q198.6094,29.2344 197.9063,29.2344 Q195.4063,29.2344 194.0781,27.5938 Q192.7656,25.9375 192.7656,22.8125 Q192.7656,19.6875 194.0781,18.0313 Q195.4063,16.375 197.9063,16.375 Q198.6094,16.375 199.25,16.5313 Q199.9063,16.6875 200.4688,16.9844 L200.4688,19.7031 Q199.8438,19.125 199.25,18.8594 Q198.6563,18.5781 198.0313,18.5781 Q196.6875,18.5781 196,19.6563 Q195.3125,20.7188 195.3125,22.8125 Q195.3125,24.9063 196,25.9844 Q196.6875,27.0469 198.0313,27.0469 Q198.6563,27.0469 199.25,26.7813 Q199.8438,26.5 200.4688,25.9219 L200.4688,28.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="87" x="211.5" y="27.8467">Environment</text><line style="stroke:#181818;stroke-width:0.5;" x1="183.5" x2="300.5" y1="39" y2="39"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="188.5" y="55.9951">-List&lt;Road&gt;</text></g><!--MD5=[f7a3090318aae5cd9b8273c9560b6a51]
+class Lane--><g id="elem_Lane"><rect codeLine="47" fill="#F1F1F1" height="137.7813" id="Lane" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="196" x="7" y="359"/><ellipse cx="84.25" cy="375" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M87.2188,380.6406 Q86.6406,380.9375 86,381.0781 Q85.3594,381.2344 84.6563,381.2344 Q82.1563,381.2344 80.8281,379.5938 Q79.5156,377.9375 79.5156,374.8125 Q79.5156,371.6875 80.8281,370.0313 Q82.1563,368.375 84.6563,368.375 Q85.3594,368.375 86,368.5313 Q86.6563,368.6875 87.2188,368.9844 L87.2188,371.7031 Q86.5938,371.125 86,370.8594 Q85.4063,370.5781 84.7813,370.5781 Q83.4375,370.5781 82.75,371.6563 Q82.0625,372.7188 82.0625,374.8125 Q82.0625,376.9063 82.75,377.9844 Q83.4375,379.0469 84.7813,379.0469 Q85.4063,379.0469 86,378.7813 Q86.5938,378.5 87.2188,377.9219 L87.2188,380.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="33" x="104.75" y="379.8467">Lane</text><line style="stroke:#181818;stroke-width:0.5;" x1="8" x2="202" y1="391" y2="391"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="17" x="13" y="407.9951">-id</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="42" x="13" y="424.292">-width</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="65" x="13" y="440.5889">-direction</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="154" x="13" y="456.8857">-List&lt;Vehicle&gt; vehicle</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="184" x="13" y="473.1826">-List&lt;Obstcale&gt; obstacles</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="100" x="13" y="489.4795">-safe_distance</text></g><!--MD5=[fbcb1dceea9c260248071806a7ce1500]
+class Road--><g id="elem_Road"><rect codeLine="55" fill="#F1F1F1" height="137.7813" id="Road" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="105" x="312.5" y="140"/><ellipse cx="344.15" cy="156" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M347.1188,161.6406 Q346.5406,161.9375 345.9,162.0781 Q345.2594,162.2344 344.5563,162.2344 Q342.0563,162.2344 340.7281,160.5938 Q339.4156,158.9375 339.4156,155.8125 Q339.4156,152.6875 340.7281,151.0313 Q342.0563,149.375 344.5563,149.375 Q345.2594,149.375 345.9,149.5313 Q346.5563,149.6875 347.1188,149.9844 L347.1188,152.7031 Q346.4938,152.125 345.9,151.8594 Q345.3063,151.5781 344.6813,151.5781 Q343.3375,151.5781 342.65,152.6563 Q341.9625,153.7188 341.9625,155.8125 Q341.9625,157.9063 342.65,158.9844 Q343.3375,160.0469 344.6813,160.0469 Q345.3063,160.0469 345.9,159.7813 Q346.4938,159.5 347.1188,158.9219 L347.1188,161.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="36" x="361.85" y="160.8467">Road</text><line style="stroke:#181818;stroke-width:0.5;" x1="313.5" x2="416.5" y1="172" y2="172"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="17" x="318.5" y="188.9951">-id</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="49" x="318.5" y="205.292">-length</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91" x="318.5" y="221.5889">-maxCapacity</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="318.5" y="237.8857">-entryPoints</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="93" x="318.5" y="254.1826">-isCongested</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="83" x="318.5" y="270.4795">-trafficLights</text></g><!--MD5=[23868d926b4091f874f65c50fc3e197e]
+class Obstacle--><g id="elem_Obstacle"><rect codeLine="63" fill="#F1F1F1" height="96.8906" id="Obstacle" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="112" x="49" y="618.5"/><ellipse cx="72.55" cy="634.5" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M75.5188,640.1406 Q74.9406,640.4375 74.3,640.5781 Q73.6594,640.7344 72.9563,640.7344 Q70.4563,640.7344 69.1281,639.0938 Q67.8156,637.4375 67.8156,634.3125 Q67.8156,631.1875 69.1281,629.5313 Q70.4563,627.875 72.9563,627.875 Q73.6594,627.875 74.3,628.0313 Q74.9563,628.1875 75.5188,628.4844 L75.5188,631.2031 Q74.8938,630.625 74.3,630.3594 Q73.7063,630.0781 73.0813,630.0781 Q71.7375,630.0781 71.05,631.1563 Q70.3625,632.2188 70.3625,634.3125 Q70.3625,636.4063 71.05,637.4844 Q71.7375,638.5469 73.0813,638.5469 Q73.7063,638.5469 74.3,638.2813 Q74.8938,638 75.5188,637.4219 L75.5188,640.1406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="61" x="88.45" y="639.3467">Obstacle</text><line style="stroke:#181818;stroke-width:0.5;" x1="50" x2="160" y1="650.5" y2="650.5"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="60" x="55" y="667.4951">-position</text><line style="stroke:#181818;stroke-width:0.5;" x1="50" x2="160" y1="674.7969" y2="674.7969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="100" x="55" y="691.792">+getPosition()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="99" x="55" y="708.0889">+setPosition()</text></g><!--MD5=[a07046c479290317f8cce38738edece0]
+class TrafficLight--><g id="elem_TrafficLight"><rect codeLine="70" fill="#F1F1F1" height="145.7813" id="TrafficLight" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="114" x="567" y="355"/><ellipse cx="585.6" cy="371" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M588.5688,376.6406 Q587.9906,376.9375 587.35,377.0781 Q586.7094,377.2344 586.0063,377.2344 Q583.5063,377.2344 582.1781,375.5938 Q580.8656,373.9375 580.8656,370.8125 Q580.8656,367.6875 582.1781,366.0313 Q583.5063,364.375 586.0063,364.375 Q586.7094,364.375 587.35,364.5313 Q588.0063,364.6875 588.5688,364.9844 L588.5688,367.7031 Q587.9438,367.125 587.35,366.8594 Q586.7563,366.5781 586.1313,366.5781 Q584.7875,366.5781 584.1,367.6563 Q583.4125,368.7188 583.4125,370.8125 Q583.4125,372.9063 584.1,373.9844 Q584.7875,375.0469 586.1313,375.0469 Q586.7563,375.0469 587.35,374.7813 Q587.9438,374.5 588.5688,373.9219 L588.5688,376.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="74" x="600.4" y="375.8467">TrafficLight</text><line style="stroke:#181818;stroke-width:0.5;" x1="568" x2="680" y1="387" y2="387"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="40" x="573" y="403.9951">-state</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="17" x="573" y="420.292">-id</text><line style="stroke:#181818;stroke-width:0.5;" x1="568" x2="680" y1="427.5938" y2="427.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="81" x="573" y="444.5889">+getState()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="80" x="573" y="460.8857">+setState()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="57" x="573" y="477.1826">+getId()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="102" x="573" y="493.4795">+toggleState()</text></g><!--MD5=[279cb8de4b4506cf7ed841756be2b026]
+class LogicalFormula--><g id="elem_LogicalFormula"><rect codeLine="80" fill="#F1F1F1" height="56.2969" id="LogicalFormula" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="273" x="753.5" y="1075.5"/><ellipse cx="834.75" cy="1091.5" fill="#B4A7E5" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M830.6719,1087.2656 L830.6719,1085.1094 L838.0625,1085.1094 L838.0625,1087.2656 L835.5938,1087.2656 L835.5938,1095.3438 L838.0625,1095.3438 L838.0625,1097.5 L830.6719,1097.5 L830.6719,1095.3438 L833.1406,1095.3438 L833.1406,1087.2656 L830.6719,1087.2656 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" font-style="italic" lengthAdjust="spacing" textLength="102" x="855.25" y="1096.3467">LogicalFormula</text><line style="stroke:#181818;stroke-width:0.5;" x1="754.5" x2="1025.5" y1="1107.5" y2="1107.5"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="261" x="759.5" y="1124.4951">+boolean evaluate(BeliefInitial beliefs)</text></g><!--MD5=[69296202a249ad96c393154fdc2834df]
+class AndFormula--><g id="elem_AndFormula"><rect codeLine="84" fill="#F1F1F1" height="96.8906" id="AndFormula" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="273" x="291.5" y="1253"/><ellipse cx="382.75" cy="1269" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M385.7188,1274.6406 Q385.1406,1274.9375 384.5,1275.0781 Q383.8594,1275.2344 383.1563,1275.2344 Q380.6563,1275.2344 379.3281,1273.5938 Q378.0156,1271.9375 378.0156,1268.8125 Q378.0156,1265.6875 379.3281,1264.0313 Q380.6563,1262.375 383.1563,1262.375 Q383.8594,1262.375 384.5,1262.5313 Q385.1563,1262.6875 385.7188,1262.9844 L385.7188,1265.7031 Q385.0938,1265.125 384.5,1264.8594 Q383.9063,1264.5781 383.2813,1264.5781 Q381.9375,1264.5781 381.25,1265.6563 Q380.5625,1266.7188 380.5625,1268.8125 Q380.5625,1270.9063 381.25,1271.9844 Q381.9375,1273.0469 383.2813,1273.0469 Q383.9063,1273.0469 384.5,1272.7813 Q385.0938,1272.5 385.7188,1271.9219 L385.7188,1274.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="82" x="403.25" y="1273.8467">AndFormula</text><line style="stroke:#181818;stroke-width:0.5;" x1="292.5" x2="563.5" y1="1285" y2="1285"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="132" x="297.5" y="1301.9951">-LogicalFormula left</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="142" x="297.5" y="1318.292">-LogicalFormula right</text><line style="stroke:#181818;stroke-width:0.5;" x1="292.5" x2="563.5" y1="1325.5938" y2="1325.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="261" x="297.5" y="1342.5889">+boolean evaluate(BeliefInitial beliefs)</text></g><!--MD5=[946fa66fe12abc91b694231a6b50b39f]
+class NotFormula--><g id="elem_NotFormula"><rect codeLine="89" fill="#F1F1F1" height="80.5938" id="NotFormula" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="273" x="599.5" y="1261"/><ellipse cx="692.25" cy="1277" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M695.2188,1282.6406 Q694.6406,1282.9375 694,1283.0781 Q693.3594,1283.2344 692.6563,1283.2344 Q690.1563,1283.2344 688.8281,1281.5938 Q687.5156,1279.9375 687.5156,1276.8125 Q687.5156,1273.6875 688.8281,1272.0313 Q690.1563,1270.375 692.6563,1270.375 Q693.3594,1270.375 694,1270.5313 Q694.6563,1270.6875 695.2188,1270.9844 L695.2188,1273.7031 Q694.5938,1273.125 694,1272.8594 Q693.4063,1272.5781 692.7813,1272.5781 Q691.4375,1272.5781 690.75,1273.6563 Q690.0625,1274.7188 690.0625,1276.8125 Q690.0625,1278.9063 690.75,1279.9844 Q691.4375,1281.0469 692.7813,1281.0469 Q693.4063,1281.0469 694,1280.7813 Q694.5938,1280.5 695.2188,1279.9219 L695.2188,1282.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="79" x="712.75" y="1281.8467">NotFormula</text><line style="stroke:#181818;stroke-width:0.5;" x1="600.5" x2="871.5" y1="1293" y2="1293"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="162" x="605.5" y="1309.9951">-LogicalFormula formula</text><line style="stroke:#181818;stroke-width:0.5;" x1="600.5" x2="871.5" y1="1317.2969" y2="1317.2969"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="261" x="605.5" y="1334.292">+boolean evaluate(BeliefInitial beliefs)</text></g><!--MD5=[e5d510079462c6c5135e2b994683684e]
+class OrFormula--><g id="elem_OrFormula"><rect codeLine="93" fill="#F1F1F1" height="96.8906" id="OrFormula" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="273" x="907.5" y="1253"/><ellipse cx="1004.25" cy="1269" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1007.2188,1274.6406 Q1006.6406,1274.9375 1006,1275.0781 Q1005.3594,1275.2344 1004.6563,1275.2344 Q1002.1563,1275.2344 1000.8281,1273.5938 Q999.5156,1271.9375 999.5156,1268.8125 Q999.5156,1265.6875 1000.8281,1264.0313 Q1002.1563,1262.375 1004.6563,1262.375 Q1005.3594,1262.375 1006,1262.5313 Q1006.6563,1262.6875 1007.2188,1262.9844 L1007.2188,1265.7031 Q1006.5938,1265.125 1006,1264.8594 Q1005.4063,1264.5781 1004.7813,1264.5781 Q1003.4375,1264.5781 1002.75,1265.6563 Q1002.0625,1266.7188 1002.0625,1268.8125 Q1002.0625,1270.9063 1002.75,1271.9844 Q1003.4375,1273.0469 1004.7813,1273.0469 Q1005.4063,1273.0469 1006,1272.7813 Q1006.5938,1272.5 1007.2188,1271.9219 L1007.2188,1274.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="71" x="1024.75" y="1273.8467">OrFormula</text><line style="stroke:#181818;stroke-width:0.5;" x1="908.5" x2="1179.5" y1="1285" y2="1285"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="132" x="913.5" y="1301.9951">-LogicalFormula left</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="142" x="913.5" y="1318.292">-LogicalFormula right</text><line style="stroke:#181818;stroke-width:0.5;" x1="908.5" x2="1179.5" y1="1325.5938" y2="1325.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="261" x="913.5" y="1342.5889">+boolean evaluate(BeliefInitial beliefs)</text></g><!--MD5=[0c14b3a8229add9a8fe06033c779c724]
+class AtomFormula--><g id="elem_AtomFormula"><rect codeLine="98" fill="#F1F1F1" height="113.1875" id="AtomFormula" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="301" x="1215.5" y="1245"/><ellipse cx="1316.25" cy="1261" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M1319.2188,1266.6406 Q1318.6406,1266.9375 1318,1267.0781 Q1317.3594,1267.2344 1316.6563,1267.2344 Q1314.1563,1267.2344 1312.8281,1265.5938 Q1311.5156,1263.9375 1311.5156,1260.8125 Q1311.5156,1257.6875 1312.8281,1256.0313 Q1314.1563,1254.375 1316.6563,1254.375 Q1317.3594,1254.375 1318,1254.5313 Q1318.6563,1254.6875 1319.2188,1254.9844 L1319.2188,1257.7031 Q1318.5938,1257.125 1318,1256.8594 Q1317.4063,1256.5781 1316.7813,1256.5781 Q1315.4375,1256.5781 1314.75,1257.6563 Q1314.0625,1258.7188 1314.0625,1260.8125 Q1314.0625,1262.9063 1314.75,1263.9844 Q1315.4375,1265.0469 1316.7813,1265.0469 Q1317.4063,1265.0469 1318,1264.7813 Q1318.5938,1264.5 1319.2188,1263.9219 L1319.2188,1266.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="91" x="1336.75" y="1265.8467">AtomFormula</text><line style="stroke:#181818;stroke-width:0.5;" x1="1216.5" x2="1515.5" y1="1277" y2="1277"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="88" x="1221.5" y="1293.9951">-String name</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="90" x="1221.5" y="1310.292">-Object value</text><line style="stroke:#181818;stroke-width:0.5;" x1="1216.5" x2="1515.5" y1="1317.5938" y2="1317.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="289" x="1221.5" y="1334.5889">+AtomFormula(String name, Object value)</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="261" x="1221.5" y="1350.8857">+boolean evaluate(BeliefInitial beliefs)</text></g><!--MD5=[a64a835c3d62471a77f615251fdde58a]
+class Position--><g id="elem_Position"><rect codeLine="105" fill="#F1F1F1" height="129.4844" id="Position" rx="2.5" ry="2.5" style="stroke:#181818;stroke-width:0.5;" width="111" x="295.5" y="833"/><ellipse cx="321.3" cy="849" fill="#ADD1B2" rx="11" ry="11" style="stroke:#181818;stroke-width:1.0;"/><path d="M324.2688,854.6406 Q323.6906,854.9375 323.05,855.0781 Q322.4094,855.2344 321.7063,855.2344 Q319.2063,855.2344 317.8781,853.5938 Q316.5656,851.9375 316.5656,848.8125 Q316.5656,845.6875 317.8781,844.0313 Q319.2063,842.375 321.7063,842.375 Q322.4094,842.375 323.05,842.5313 Q323.7063,842.6875 324.2688,842.9844 L324.2688,845.7031 Q323.6438,845.125 323.05,844.8594 Q322.4563,844.5781 321.8313,844.5781 Q320.4875,844.5781 319.8,845.6563 Q319.1125,846.7188 319.1125,848.8125 Q319.1125,850.9063 319.8,851.9844 Q320.4875,853.0469 321.8313,853.0469 Q322.4563,853.0469 323.05,852.7813 Q323.6438,852.5 324.2688,851.9219 L324.2688,854.6406 Z " fill="#000000"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="55" x="337.7" y="853.8467">Position</text><line style="stroke:#181818;stroke-width:0.5;" x1="296.5" x2="405.5" y1="865" y2="865"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="33" x="301.5" y="881.9951">-int x</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="33" x="301.5" y="898.292">-int y</text><line style="stroke:#181818;stroke-width:0.5;" x1="296.5" x2="405.5" y1="905.5938" y2="905.5938"/><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="54" x="301.5" y="922.5889">+getX()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="54" x="301.5" y="938.8857">+getY()</text><text fill="#000000" font-family="sans-serif" font-size="14" lengthAdjust="spacing" textLength="99" x="301.5" y="955.1826">+distanceTo()</text></g><g id="elem_GMN215"><path d="M238.5,415.5 L238.5,440.6328 A0,0 0 0 0 238.5,440.6328 L379.31,440.6328 L363.66,577.76 L387.31,440.6328 L531.5,440.6328 A0,0 0 0 0 531.5,440.6328 L531.5,425.5 L521.5,415.5 L238.5,415.5 A0,0 0 0 0 238.5,415.5 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M521.5,415.5 L521.5,425.5 L531.5,425.5 L521.5,415.5 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="272" x="244.5" y="432.5669">Un agent autonome suivant le modèle BDI</text></g><g id="elem_GMN291"><path d="M506.5,654.5 L506.5,679.6328 L825.5,679.6328 L825.5,664.5 L815.5,654.5 L506.5,654.5 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M815.5,654.5 L815.5,664.5 L825.5,664.5 L815.5,654.5 " fill="#FEFFDD" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="298" x="512.5" y="671.5669">Stocke et met à jour les croyances du véhicule</text></g><g id="elem_GMN294"><path d="M806,885 L806,910.1328 L1120,910.1328 L1120,895 L1110,885 L806,885 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M1110,885 L1110,895 L1120,895 L1110,885 " fill="#FEFFDD" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="293" x="812" y="902.0669">Interface pour la logique de raisonnement BDI</text></g><g id="elem_GMN297"><path d="M337,22.5 L337,47.6328 A0,0 0 0 0 337,47.6328 L475.74,47.6328 L413.81,139.75 L483.74,47.6328 L639,47.6328 A0,0 0 0 0 639,47.6328 L639,32.5 L629,22.5 L337,22.5 A0,0 0 0 0 337,22.5 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><path d="M629,22.5 L629,32.5 L639,32.5 L629,22.5 " fill="#FEFFDD" style="stroke:#181818;stroke-width:0.5;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="281" x="343" y="39.5669">Stocke et gère plusieurs voies de circulation</text></g><!--MD5=[b21e76246fd038637fbe72ceabc0e99d]
+link Environment to Road--><g id="link_Environment_Road"><path codeLine="114" d="M261.49,63.25 C275.44,82.77 294.92,110 313.22,135.6 " fill="none" id="Environment-to-Road" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="316.15,139.69,314.1481,130.0467,313.233,135.6291,307.6507,134.7139,316.15,139.69" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="52" x="294" y="106.0669">contient</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="257.0721" y="83.5651">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="273.2561" y="128.854">many</text></g><!--MD5=[e2657ad8edf1a65203e0bd8cfd9a8d22]
+reverse link Road to Lane--><g id="link_Road_Lane"><path codeLine="115" d="M302.38,262.26 C267.67,291.24 224.09,327.6 186.72,358.79 " fill="none" id="Road-backto-Lane" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="312.39,253.91,305.2203,254.6812,303.1746,261.5961,310.3443,260.8249,312.39,253.91" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="244" y="321.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="296.4292" y="256.2624">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="157.2911" y="347.9643">many</text></g><!--MD5=[e6d8ba4425614fa136884b9046bdb41f]
+reverse link Road to TrafficLight--><g id="link_Road_TrafficLight"><path codeLine="116" d="M428.04,257.24 C464.15,284.9 509.91,320.98 549,355 C554.85,360.1 560.86,365.51 566.8,370.99 " fill="none" id="Road-backto-TrafficLight" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="417.64,249.31,419.9816,256.1303,427.1779,256.5921,424.8363,249.7717,417.64,249.31" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="510" y="321.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="425.605" y="251.0155">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="523.045" y="361.4224">many</text></g><!--MD5=[936f3b54582d6658a3ba1f67012d859b]
+reverse link Lane to Obstacle--><g id="link_Lane_Obstacle"><path codeLine="117" d="M105,510.69 C105,546.53 105,587.35 105,618.14 " fill="none" id="Lane-backto-Obstacle" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="105,497.23,101,503.23,105,509.23,109,503.23,105,497.23" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="106" y="544.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="96.6063" y="516.8673">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="66.4688" y="607.2983">many</text></g><!--MD5=[b06b9052318a5aa804c51a98d611f6d5]
+reverse link Lane to Vehicle--><g id="link_Lane_Vehicle"><path codeLine="118" d="M185.47,506.53 C209.16,529.35 235.26,554.5 259.59,577.93 " fill="none" id="Lane-backto-Vehicle" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="175.82,497.23,177.3659,504.2734,184.4621,505.5555,182.9162,498.512,175.82,497.23" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="229" y="544.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="174.3976" y="516.8673">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="214.5295" y="566.9897">many</text></g><!--MD5=[8001e27349315bd3485af93a715d5a6d]
+reverse link Vehicle to Desire--><g id="link_Vehicle_Desire"><path codeLine="119" d="M483.87,754.1 C485.58,754.76 487.29,755.39 489,756 C762.56,853.66 866.01,731.06 1138,833 C1143.86,835.2 1149.71,837.83 1155.45,840.77 " fill="none" id="Vehicle-backto-Desire" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="471.76,749.07,475.7686,755.0642,482.8435,753.6695,478.8349,747.6752,471.76,749.07" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="1033" y="799.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="479.3626" y="750.6736">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="1111.4105" y="832.302">many</text></g><!--MD5=[332fb5fa745fc829916bdad481de5246]
+reverse link Vehicle to Intention--><g id="link_Vehicle_Intention"><path codeLine="120" d="M285.88,767.2 C270.31,790.92 254.16,815.52 240.18,836.81 " fill="none" id="Vehicle-backto-Intention" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="293.22,756.02,286.5849,758.8441,286.6399,766.055,293.2749,763.2309,293.22,756.02" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="273" y="799.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="279.9108" y="776.3712">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="206.6289" y="825.9721">many</text></g><!--MD5=[fb3f616ee721a92344f6775dc223b937]
+reverse link Vehicle to Position--><g id="link_Vehicle_Position"><path codeLine="121" d="M351,769.07 C351,790.8 351,813.18 351,832.99 " fill="none" id="Vehicle-backto-Position" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="351,756.02,347,762.02,351,768.02,355,762.02,351,756.02" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="83" x="352" y="799.0669">est localisé à</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="342.6563" y="776.3712">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="342.5375" y="821.7104">1</text></g><!--MD5=[115d2c60903a962e724aef0084447bff]
+reverse link Vehicle to BeliefInitial--><g id="link_Vehicle_BeliefInitial"><path codeLine="122" d="M443.93,765.61 C457.11,778.47 470.7,791.26 484,803 C498.5,815.81 514.57,828.86 530.17,840.99 " fill="none" id="Vehicle-backto-BeliefInitial" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="434.42,756.24,435.8892,763.2999,442.971,764.659,441.5019,757.5992,434.42,756.24" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="54" x="485" y="799.0669">possède</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="432.997" y="776.3081">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="511.9418" y="829.8521">1</text></g><!--MD5=[50d3150b93927b7bf0c331cdac66807b]
+reverse link BeliefInitial to Belief--><g id="link_BeliefInitial_Belief"><path codeLine="123" d="M565.89,965.96 C562.26,974.5 559.14,983.29 557,992 C553.33,1006.91 552.25,1023.29 552.49,1038.77 " fill="none" id="BeliefInitial-backto-Belief" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="571.34,954.12,565.2002,957.9019,566.3297,965.024,572.4695,961.2421,571.34,954.12" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="52" x="558" y="1005.0669">contient</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="558.3867" y="974.3988">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="513.6998" y="1027.9175">many</text></g><!--MD5=[5dcfc983d2e7dd1e4bf99dafb8df3b89]
+link BeliefInitial to LogicalFormula--><g id="link_BeliefInitial_LogicalFormula"><path codeLine="124" d="M719.37,954.21 C739.52,965.75 759.85,978.53 778,992 C809.86,1015.64 841.62,1048.02 863.13,1071.61 " fill="none" id="BeliefInitial-to-LogicalFormula" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="866.5,1075.32,863.3949,1065.9734,863.1324,1071.6242,857.4816,1071.3616,866.5,1075.32" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="121" x="799" y="1005.0669">utilise pour évaluer</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="724.6995" y="974.0992">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="821.4219" y="1064.564">many</text></g><!--MD5=[5dcfc983d2e7dd1e4bf99dafb8df3b89]
+link BeliefInitial to LogicalFormula--><g id="link_BeliefInitial_LogicalFormula"><path codeLine="125" d="M616.73,954.23 C622.84,973.6 632.33,994.15 647,1009 C676.77,1039.13 717.29,1059.72 756.72,1073.73 " fill="none" id="BeliefInitial-to-LogicalFormula-1" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="761.52,1075.41,754.3376,1068.6711,756.7985,1073.7646,751.705,1076.2255,761.52,1075.41" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="121" x="648" y="1005.0669">utilise pour évaluer</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="609.5502" y="974.1216">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="36" x="709.4988" y="1068.5753">many</text></g><!--MD5=[62739e7070fe6fb670156e2cf8e2f970]
+reverse link LogicalFormula to AndFormula--><g id="link_LogicalFormula_AndFormula"><path codeLine="126" d="M807.66,1139.43 C733.19,1171.02 622.9,1217.82 540.35,1252.84 " fill="none" id="LogicalFormula-backto-AndFormula" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="none" points="805.1,1132.91,826.25,1131.55,810.57,1145.8,805.1,1132.91" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="77" x="660" y="1211.0669">implémente</text></g><!--MD5=[f402cab36ae3ace364a20049a92d3930]
+reverse link LogicalFormula to NotFormula--><g id="link_LogicalFormula_NotFormula"><path codeLine="127" d="M856.09,1147.66 C829.53,1181.46 792.88,1228.1 767.08,1260.95 " fill="none" id="LogicalFormula-backto-NotFormula" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="none" points="850.73,1143.15,868.59,1131.75,861.73,1151.8,850.73,1143.15" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="77" x="814" y="1211.0669">implémente</text></g><!--MD5=[f39f6aa0009f87769fc71e3e910fab63]
+reverse link LogicalFormula to OrFormula--><g id="link_LogicalFormula_OrFormula"><path codeLine="128" d="M924,1147.77 C948.41,1178.84 981.3,1220.71 1006.48,1252.75 " fill="none" id="LogicalFormula-backto-OrFormula" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="none" points="918.27,1151.8,911.41,1131.75,929.27,1143.15,918.27,1151.8" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="77" x="977" y="1211.0669">implémente</text></g><!--MD5=[bf8744a09dcaea60a1f32333bede14de]
+reverse link LogicalFormula to AtomFormula--><g id="link_LogicalFormula_AtomFormula"><path codeLine="129" d="M974.4,1139.25 C1045.53,1168.54 1148.62,1210.99 1231.17,1244.98 " fill="none" id="LogicalFormula-backto-AtomFormula" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="none" points="971.51,1145.63,955.69,1131.55,976.84,1132.69,971.51,1145.63" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="77" x="1157" y="1211.0669">implémente</text></g><!--MD5=[052ea722492e6f127604b04a1ecb92b8]
+reverse link Desire to LogicalFormula--><g id="link_Desire_LogicalFormula"><path codeLine="130" d="M1144.49,957.91 C1142.31,959.3 1140.15,960.66 1138,962 C1071.01,1003.74 991.23,1048.01 940.6,1075.45 " fill="none" id="Desire-backto-LogicalFormula" style="stroke:#181818;stroke-width:1.0;"/><polygon fill="#181818" points="1155.47,950.84,1148.2598,950.7279,1145.3831,957.3404,1152.5934,957.4525,1155.47,950.84" style="stroke:#181818;stroke-width:1.0;"/><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="55" x="1085" y="1005.0669">basé sur</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="1139.2685" y="952.616">1</text><text fill="#000000" font-family="sans-serif" font-size="13" lengthAdjust="spacing" textLength="8" x="943.3763" y="1064.277">1</text></g><!--MD5=[1249c1275215e44ba568c6e470e2fa62]
+link GMN291 to BeliefInitial--><g id="link_GMN291_BeliefInitial"><path d="M664.98,679.75 C662.73,703.43 656.52,758.42 644,803 C640.49,815.48 635.84,828.56 630.99,840.85 " fill="none" id="GMN291-BeliefInitial" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/></g><!--MD5=[afd39d651ae2427b4461a987d651bb30]
+link GMN294 to LogicalFormula--><g id="link_GMN294_LogicalFormula"><path d="M961.86,910.1 C959.59,930.58 953.61,974.25 941,1009 C932.49,1032.47 918.77,1057.18 907.71,1075.31 " fill="none" id="GMN294-LogicalFormula" style="stroke:#181818;stroke-width:1.0;stroke-dasharray:7.0,7.0;"/></g><!--MD5=[60febe91e8c94abd34192675f0cf41f3]
+@startuml
+' Définition des classes principales
+class Vehicle {
+    - BeliefInitial beliefs
+    - List<Desire> desires
+    - List<Intention> intentions
+    - Position position
+    + void perceive(Environment env)
+    + void updateDesires()
+    + void executeIntentions()
+    etc ...
+}
+
+class BeliefInitial {
+    - Set<Belief> beliefs
+    + void updateBeliefs(Environment env)
+    + void addBelief(Belief belief)
+    + boolean contains(String name, Object value)
+}
+
+class Belief {
+    - String name
+    - Object value
+    + equals()
+    + getName()
+    + getValue()
+}
+
+class Desire {
+    - String name
+    - boolean isAchieved
+    + getName()
+    + isAhieved()
+    + setAchived()
+}
+
+class Intention {
+    <<enumeration>>
+    ACCELERATE
+    TURN_LEFT
+    STOP
+    TURN_RIGHT
+}
+
+class Environment {
+    - List<Road>
+}
+class Lane {
+    - id
+    - width
+    - direction
+    - List<Vehicle> vehicle
+    - List<Obstcale> obstacles
+    - safe_distance
+}
+class Road {
+    - id
+    - length
+    - maxCapacity
+    - entryPoints
+    - isCongested
+    - trafficLights
+}
+class Obstacle {
+    - position
+    + getPosition()
+    + setPosition()
+}
+
+
+class TrafficLight {
+    - state
+    - id
+    + getState()
+    + setState()
+    + getId()
+    + toggleState()
+}
+
+
+interface LogicalFormula {
+    + boolean evaluate(BeliefInitial beliefs)
+}
+
+class AndFormula {
+    - LogicalFormula left
+    - LogicalFormula right
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class NotFormula {
+    - LogicalFormula formula
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class OrFormula {
+    - LogicalFormula left
+    - LogicalFormula right
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class AtomFormula {
+    - String name
+    - Object value
+    + AtomFormula(String name, Object value)
+    + boolean evaluate(BeliefInitial beliefs)
+}
+
+class Position {
+    - int x
+    - int y
+    + getX()
+    + getY()
+    + distanceTo()
+}
+
+' Relations entre les classes
+Environment "1" - -> "many" Road : contient
+Road "1" *- - "many" Lane : possède
+Road "1" *- - "many" TrafficLight : possède
+Lane "1" *- - "many" Obstacle : possède
+Lane "1" *- - "many" Vehicle : possède
+Vehicle "1" *- - "many" Desire : possède
+Vehicle "1" *- - "many" Intention : possède
+Vehicle "1" *- - "1" Position : est localisé à
+Vehicle "1" *- - "1" BeliefInitial : possède
+BeliefInitial "1" *- - "many" Belief : contient
+BeliefInitial "1" - -> "many" LogicalFormula : utilise pour évaluer
+BeliefInitial "1" - -> "many" LogicalFormula : utilise pour évaluer
+LogicalFormula <|- - AndFormula : implémente
+LogicalFormula <|- - NotFormula : implémente
+LogicalFormula <|- - OrFormula : implémente
+LogicalFormula <|- - AtomFormula : implémente
+Desire "1" *- - "1" LogicalFormula : basé sur
+
+' Ajouter des notes pour clarifier
+note top of Vehicle : Un agent autonome suivant le modèle BDI
+note top of BeliefInitial : Stocke et met à jour les croyances du véhicule
+note top of LogicalFormula : Interface pour la logique de raisonnement BDI
+note top of Road: Stocke et gère plusieurs voies de circulation 
+' Amélioration du style pour la lisibilité
+hide empty members
+skinparam classAttributeIconSize 0
+@enduml
+
+@startuml
+class Vehicle {
+    - BeliefInitial beliefs
+    - List<Desire> desires
+    - List<Intention> intentions
+    - Position position
+    + void perceive(Environment env)
+    + void updateDesires()
+    + void executeIntentions()
+    etc ...
+}
+
+class BeliefInitial {
+    - Set<Belief> beliefs
+    + void updateBeliefs(Environment env)
+    + void addBelief(Belief belief)
+    + boolean contains(String name, Object value)
+}
+
+class Belief {
+    - String name
+    - Object value
+    + equals()
+    + getName()
+    + getValue()
+}
+
+class Desire {
+    - String name
+    - boolean isAchieved
+    + getName()
+    + isAhieved()
+    + setAchived()
+}
+
+class Intention {
+    <<enumeration>>
+    ACCELERATE
+    TURN_LEFT
+    STOP
+    TURN_RIGHT
+}
+
+class Environment {
+    - List<Road>
+}
+class Lane {
+    - id
+    - width
+    - direction
+    - List<Vehicle> vehicle
+    - List<Obstcale> obstacles
+    - safe_distance
+}
+class Road {
+    - id
+    - length
+    - maxCapacity
+    - entryPoints
+    - isCongested
+    - trafficLights
+}
+class Obstacle {
+    - position
+    + getPosition()
+    + setPosition()
+}
+
+
+class TrafficLight {
+    - state
+    - id
+    + getState()
+    + setState()
+    + getId()
+    + toggleState()
+}
+
+
+interface LogicalFormula {
+    + boolean evaluate(BeliefInitial beliefs)
+}
+
+class AndFormula {
+    - LogicalFormula left
+    - LogicalFormula right
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class NotFormula {
+    - LogicalFormula formula
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class OrFormula {
+    - LogicalFormula left
+    - LogicalFormula right
+    + boolean evaluate(BeliefInitial beliefs)
+}
+class AtomFormula {
+    - String name
+    - Object value
+    + AtomFormula(String name, Object value)
+    + boolean evaluate(BeliefInitial beliefs)
+}
+
+class Position {
+    - int x
+    - int y
+    + getX()
+    + getY()
+    + distanceTo()
+}
+
+Environment "1" - -> "many" Road : contient
+Road "1" *- - "many" Lane : possède
+Road "1" *- - "many" TrafficLight : possède
+Lane "1" *- - "many" Obstacle : possède
+Lane "1" *- - "many" Vehicle : possède
+Vehicle "1" *- - "many" Desire : possède
+Vehicle "1" *- - "many" Intention : possède
+Vehicle "1" *- - "1" Position : est localisé à
+Vehicle "1" *- - "1" BeliefInitial : possède
+BeliefInitial "1" *- - "many" Belief : contient
+BeliefInitial "1" - -> "many" LogicalFormula : utilise pour évaluer
+BeliefInitial "1" - -> "many" LogicalFormula : utilise pour évaluer
+LogicalFormula <|- - AndFormula : implémente
+LogicalFormula <|- - NotFormula : implémente
+LogicalFormula <|- - OrFormula : implémente
+LogicalFormula <|- - AtomFormula : implémente
+Desire "1" *- - "1" LogicalFormula : basé sur
+
+note top of Vehicle : Un agent autonome suivant le modèle BDI
+note top of BeliefInitial : Stocke et met à jour les croyances du véhicule
+note top of LogicalFormula : Interface pour la logique de raisonnement BDI
+note top of Road: Stocke et gère plusieurs voies de circulation 
+hide empty members
+skinparam classAttributeIconSize 0
+@enduml
+
+PlantUML version 1.2022.7(Mon Aug 22 17:01:30 UTC 2022)
+(GPL source distribution)
+Java Runtime: OpenJDK Runtime Environment
+JVM: OpenJDK 64-Bit Server VM
+Default Encoding: UTF-8
+Language: en
+Country: null
+--></g></svg>

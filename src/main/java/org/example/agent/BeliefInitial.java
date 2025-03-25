@@ -1,5 +1,6 @@
 package org.example.agent;
 
+import org.example.environment.Lane;
 import org.example.environment.Road;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,28 +18,28 @@ public class BeliefInitial {
         return beliefs.stream()
                 .anyMatch(b -> b.getName().equals(name) && b.getValue().equals(value));
     }
-    public void updateBeliefs(Road road, Vehicle vehicle) {
+    public void updateBeliefs(Lane lane,Road road, Vehicle vehicle) {
         beliefs.clear();
         // Exemple : Mettre à jour les croyances en fonction des feux de circulation
-        if (road.isTrafficLightGreen("Road1")) {
+        if (lane.isTrafficLightGreen(road ,"Road1")) {
             addBelief(new Belief("FeuVert", true));
         } else {
             addBelief(new Belief("FeuVert", false));
         }
 
         // Exemple : Mettre à jour les croyances en fonction des autres véhicules
-        if (road.isCarAhead(vehicle)) {
+        if (lane.isCarAhead(vehicle)) {
             addBelief(new Belief("CarAhead", true));
         } else {
             addBelief(new Belief("CarAhead", false));
         }
 
-        if (road.isCarBehind(vehicle)){
+        if (lane.isCarBehind(vehicle)){
             addBelief(new Belief("CarBehind", true));
         }else {
             addBelief(new Belief("CarBehind", false));
         }
-        if(road.isObstacleAhead(vehicle)){
+        if(lane.isObstacleAhead(vehicle)){
             addBelief(new Belief("ObstacleAhead", true));
         }else{
             addBelief(new Belief("ObstacleAhead", false));

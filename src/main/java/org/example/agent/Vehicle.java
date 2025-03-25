@@ -1,5 +1,6 @@
 package org.example.agent;
 import org.example.environment.Environment;
+import org.example.environment.Lane;
 import org.example.environment.Road;
 import org.example.logic.AndFormula;
 import org.example.logic.AtomFormula;
@@ -32,8 +33,8 @@ public class Vehicle {
     public List<Desire> getDesires() {
         return desires;
     }
-    public void perceivedEnvironment(Road road){
-        beliefs.updateBeliefs(road, this);
+    public void perceivedEnvironment(Lane lane, Road road){
+        beliefs.updateBeliefs(lane,road,this);
     }
     public void addDesire(Desire desire) {
         desires.add(desire);
@@ -45,14 +46,11 @@ public class Vehicle {
         intentions.add(intention);
     }
 
-    private boolean isTooClose(Vehicle other, Road road) {
-        double distance = this.position.distanceTo(other.getPosition());
-        return distance < road.getSafeDistance();
-    }
     public List<Intention> getIntentions() {
         return intentions;
     }
-    public void decideNextAction(Road road) {
+
+    public void decideNextAction(Lane lane) {
         intentions.clear(); // Réinitialiser les intentions
 
         LogicalFormula feuVert = new AtomFormula("FeuVert", true);
