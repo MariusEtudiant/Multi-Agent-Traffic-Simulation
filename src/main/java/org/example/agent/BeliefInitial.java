@@ -20,31 +20,27 @@ public class BeliefInitial {
     }
     public void updateBeliefs(Lane lane,Road road, Vehicle vehicle) {
         beliefs.clear();
-        // Exemple : Mettre à jour les croyances en fonction des feux de circulation
-        if (lane.isTrafficLightGreen(road ,"Road1")) {
-            addBelief(new Belief("FeuVert", true));
-        } else {
-            addBelief(new Belief("FeuVert", false));
-        }
 
-        // Exemple : Mettre à jour les croyances en fonction des autres véhicules
-        if (lane.isCarAhead(vehicle)) {
-            addBelief(new Belief("CarAhead", true));
-        } else {
-            addBelief(new Belief("CarAhead", false));
-        }
+        // Feux de circulation
+        boolean isGreen = lane.isTrafficLightGreen(road, road.getId());
+        addBelief(new Belief("FeuVert", isGreen));
+        addBelief(new Belief("FeuRouge", !isGreen));
 
-        if (lane.isCarBehind(vehicle)){
-            addBelief(new Belief("CarBehind", true));
-        }else {
-            addBelief(new Belief("CarBehind", false));
-        }
-        if(lane.isObstacleAhead(vehicle)){
-            addBelief(new Belief("ObstacleAhead", true));
-        }else{
-            addBelief(new Belief("ObstacleAhead", false));
-        }
-        System.out.println("Croyances mises à jour : " + beliefs);
+
+        // Détection des véhicules
+        addBelief(new Belief("CarAhead", lane.isCarAhead(vehicle)));
+        addBelief(new Belief("CarOnLeft", lane.isCarOnLeft(vehicle)));
+        addBelief(new Belief("CarOnRight", lane.isCarOnRight(vehicle)));
+
+        // Obstacles
+        addBelief(new Belief("ObstacleAhead", lane.isObstacleAhead(vehicle)));
+        // État du trafic
+        addBelief(new Belief("InTrafficJam", lane.isInTrafficJam()));
+
+        // Véhicules prioritaires
+        addBelief(new Belief("PriorityVehicle", lane.isPriorityVehicleNearby(vehicle)));
+
+
     }
     @Override
     public String toString() {

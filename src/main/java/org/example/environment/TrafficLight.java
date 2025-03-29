@@ -3,6 +3,8 @@ package org.example.environment;
 public class TrafficLight {
     private String id;
     private  String state;
+    private int changeInterval = 10;
+    private int stepCount = 0;
 
     public TrafficLight(String id, String state) {
         this.id = id;
@@ -16,6 +18,14 @@ public class TrafficLight {
     }
     public String getId() {
         return id;
+    }
+
+    public void update(){
+        stepCount++;
+        if (stepCount % changeInterval == 0) {
+            toggleState();
+            stepCount = 0;
+        }
     }
     public void toggleState() {
         if ("GREEN".equals(state)) {

@@ -4,7 +4,6 @@ import org.example.agent.Vehicle;
 import org.example.agent.Position;
 import java.util.ArrayList;
 import java.util.List;
-
 /**
  * Représente une route dans l'environnement de simulation.
  * Peut contenir des véhicules, gérer leur positionnement et fournir des métriques.
@@ -31,7 +30,7 @@ public class Road {
 
     public void addLane(Lane lane) {
         lanes.add(lane);
-        lane.setRoad(this); // Si Lane a une référence à Road
+        lane.setRoad(this);
     }
     public static int maxCapacityCount(){return maxCapacity;}
     public void addTrafficLight(TrafficLight trafficLight, Position position){
@@ -41,7 +40,22 @@ public class Road {
     public List<TrafficLight> getTrafficLights() {
         return trafficLights;
     }
-
+    public boolean hasLeftLane(Lane currentLane) {
+        int index = lanes.indexOf(currentLane);
+        return index > 0;
+    }
+    public boolean hasRightLane(Lane currentLane) {
+        int index = lanes.indexOf(currentLane);
+        return index < lanes.size() - 1;
+    }
+    public Lane getLeftLane(Lane currentLane) {
+        if (!hasLeftLane(currentLane)) return null;
+        return lanes.get(lanes.indexOf(currentLane) - 1);
+    }
+    public Lane getRightLane(Lane currentLane) {
+        if (!hasRightLane(currentLane)) return null;
+        return lanes.get(lanes.indexOf(currentLane) + 1);
+    }
     public boolean isCongested() {
         return isCongested;
     }
@@ -50,15 +64,9 @@ public class Road {
         return id;
     }
 
-    public double getLength() {
-        return length;
-    }
 
     public int getMaxCapacity() {
         return maxCapacity;
     }
 
-    public List<Position> getEntryPoints() {
-        return entryPoints;
-    }
 }
