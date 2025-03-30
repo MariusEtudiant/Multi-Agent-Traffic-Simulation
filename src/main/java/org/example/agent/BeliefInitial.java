@@ -1,3 +1,19 @@
+/*
+Role: Represents the belief base of a BDI (Belief-Desire-Intention) agent, storing and managing the agent's
+perceptions of its environment at a fairly low layer, i.e. lights, vehicle detections, obstacles, but no deeper coyances.
+
+Main responsibilities
+Maintains a set (HashSet<Belief>) of current beliefs.
+
+Dynamic updating:
+
+Synchronizes beliefs with the environment via updateBeliefs().
+
+Query interface:
+
+Allows you to check a belief (contains()) and display the complete state (toString()).
+ */
+
 package org.example.agent;
 
 import org.example.environment.Lane;
@@ -11,13 +27,7 @@ public class BeliefInitial {
     public BeliefInitial() {
         this.beliefs = new HashSet<>();
     }
-    public void addBelief(Belief belief) {
-        beliefs.add(belief);
-    }
-    public boolean contains(String name, Object value) {
-        return beliefs.stream()
-                .anyMatch(b -> b.getName().equals(name) && b.getValue().equals(value));
-    }
+
     public void updateBeliefs(Lane lane,Road road, Vehicle vehicle) {
         beliefs.clear();
 
@@ -42,6 +52,15 @@ public class BeliefInitial {
 
 
     }
+
+    public void addBelief(Belief belief) {
+        beliefs.add(belief);
+    }
+    public boolean contains(String name, Object value) {
+        return beliefs.stream()
+                .anyMatch(b -> b.getName().equals(name) && b.getValue().equals(value));
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

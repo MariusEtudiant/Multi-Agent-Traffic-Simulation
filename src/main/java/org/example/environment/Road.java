@@ -5,20 +5,20 @@ import org.example.agent.Position;
 import java.util.ArrayList;
 import java.util.List;
 /**
- * Représente une route dans l'environnement de simulation.
- * Peut contenir des véhicules, gérer leur positionnement et fournir des métriques.
+ * Represents a road in the simulation environment.
+ * Can contain vehicles, manage their positioning and provide metrics.
  */
 public class Road {
-    private final String id;  // Identifiant unique de la route
-    private final double length;  // Longueur de la route (en mètres ou en unités arbitraires)
-    private static final int maxCapacity = 15;  // Capacité maximale de véhicules
-    private final List<Position> entryPoints;  // Points d'entrée/sortie (intersections)
+    private final String id;
+    private final double length;
+    private static final int maxCapacity = 15;
+    private final List<Position> entryPoints;  // entry points/end (intersections etc)
     private final List<TrafficLight> trafficLights;
     private final List<Lane> lanes;
-    private boolean isCongested;  // Indique si la route est congestionnée
+    private boolean isCongested;
 
 
-    // Constructeur
+    // Construct
     public Road(String id, double length, int maxCapacity, List<Position> entryPoints) {
         this.id = id;
         this.length = length;
@@ -26,6 +26,29 @@ public class Road {
         this.isCongested = false;
         this.trafficLights = new ArrayList<>();
         this.lanes = new ArrayList<>();
+    }
+    // for the next semester
+    public enum RoadCondition{
+        DRY(1.0), WET(0.7), ICY(0.3);
+
+        private final double frictionFactor;
+
+        RoadCondition(double frictionFactor) {
+            this.frictionFactor = frictionFactor;
+        }
+
+        public double getFrictionFactor() {
+            return frictionFactor;
+        }
+    }
+    private RoadCondition condition = RoadCondition.DRY;
+
+    public void setCondition(RoadCondition condition) {
+        this.condition = condition;
+    }
+
+    public RoadCondition getCondition() {
+        return condition;
     }
 
     public void addLane(Lane lane) {
@@ -37,9 +60,6 @@ public class Road {
         trafficLights.add(trafficLight);
     }
 
-    public List<TrafficLight> getTrafficLights() {
-        return trafficLights;
-    }
     public boolean hasLeftLane(Lane currentLane) {
         int index = lanes.indexOf(currentLane);
         return index > 0;
@@ -48,25 +68,26 @@ public class Road {
         int index = lanes.indexOf(currentLane);
         return index < lanes.size() - 1;
     }
-    public Lane getLeftLane(Lane currentLane) {
-        if (!hasLeftLane(currentLane)) return null;
-        return lanes.get(lanes.indexOf(currentLane) - 1);
-    }
-    public Lane getRightLane(Lane currentLane) {
-        if (!hasRightLane(currentLane)) return null;
-        return lanes.get(lanes.indexOf(currentLane) + 1);
-    }
     public boolean isCongested() {
         return isCongested;
     }
 
+    public Lane getRightLane(Lane currentLane) {
+        if (!hasRightLane(currentLane)) return null;
+        return lanes.get(lanes.indexOf(currentLane) + 1);
+    }
+    public Lane getLeftLane(Lane currentLane) {
+        if (!hasLeftLane(currentLane)) return null;
+        return lanes.get(lanes.indexOf(currentLane) - 1);
+    }
     public String getId() {
         return id;
     }
-
-
     public int getMaxCapacity() {
         return maxCapacity;
+    }
+    public List<TrafficLight> getTrafficLights() {
+        return trafficLights;
     }
 
 }

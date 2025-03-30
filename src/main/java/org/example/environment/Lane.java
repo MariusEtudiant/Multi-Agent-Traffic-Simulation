@@ -1,5 +1,11 @@
 package org.example.environment;
-
+/*
+The Lane class models a traffic lane in a simulated road network. It acts as an interface between the vehicles
+(Vehicle) and the environment (Road), managing :
+the physical position of vehicles and obstacles
+Local interactions (collision detection, traffic lights)
+Traffic logic (direction of travel, maximum capacity)
+ */
 import org.example.agent.Position;
 import org.example.agent.Vehicle;
 
@@ -38,16 +44,7 @@ public class Lane {
         }
         vehicles.add(vehicle);
     }
-    public double getCenterY() {
-        return centerY;
-    }
-    public int getCenterYInt() {
-        return (int) Math.round(this.centerY);
-    }
     public void addObstacle(Obstacle obstacle){obstacles.add(obstacle);}
-    public double getSafeDistance() {
-        return SAFE_DISTANCE;
-    }
 
     public boolean isCarAhead(Vehicle vehicle) {
         Position currentPos = vehicle.getPosition();
@@ -173,21 +170,11 @@ public class Lane {
     public boolean isInTrafficJam() {
         return getVehicleCount() > getRoad().getMaxCapacity() * 0.7;
     }
-    public double getVehicleSpeed(Vehicle vehicle) {
-        // Vitesse de base réduite si feu rouge ou obstacle
-        if (!isTrafficLightGreen(road, road.getId())) {
-            return 0.0;
-        }
-        if (isObstacleAhead(vehicle)) {
-            return 20.0;
-        }
-        return 50.0; // Vitesse normale
-    }
 
     public boolean isPriorityVehicleNearby(Vehicle vehicle) {
-        // À implémenter selon vos besoins
         return false;
     }
+    //gets
 
     public int getVehicleCount() {
         return vehicles.size();
@@ -207,21 +194,31 @@ public class Lane {
     public String getId() {
         return this.id;
     }
+    public double getCenterY() {
+        return centerY;
+    }
+    public int getCenterYInt() {
+        return (int) Math.round(this.centerY);
+    }
 
+    //next implementations
+    public double getVehicleSpeed(Vehicle vehicle) {
+        // Vitesse de base réduite si feu rouge ou obstacle
+        if (!isTrafficLightGreen(road, road.getId())) {
+            return 0.0;
+        }
+        if (isObstacleAhead(vehicle)) {
+            return 20.0;
+        }
+        return 50.0; // Vitesse normale
+    }
+    public double getSafeDistance() {
+        return SAFE_DISTANCE;
+    }
     public void updateAllVehicles(Road road) {
         for (Vehicle vehicle : vehicles) {
             vehicle.bdiCycle(this, road);
         }
     }
 
-    /*
-    public void update(){
-        // mettre à jour l'état de l'env
-        for (Vehicle vehicle : vehicles){
-            vehicle.perceivedEnvironment(this, this.getRoad());
-            vehicle.decideNextAction(this);
-            vehicle.act();
-        }
-    }
-    */
 }

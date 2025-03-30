@@ -1,4 +1,30 @@
 package org.example.agent;
+
+
+/*
+The heart of the reactor !! this class models an intelligent vehicle capable of navigating in a simulated traffic environment by making
+decisions based on its perceptions.
+Architecture BDI: BeliefInitial, stores perceptions (lights, obstacles, other vehicles), List<Desire> Hierarchical goals (reach destination, avoid collisions)
+Intentions Queue<Intention> Concrete actions to execute (accelerate, turn, etc.)
+
+perceivedEnvironment() méthod is not a redundancy of BeliefsInitial's updateBeliefs, even if it did create beliefs: in fact, it coordinates
+the overall perception of the vehicle and updates certain specific beliefs that require calculations or contexts specific to the vehicle.
+
+exemple:
+Scenario: A red light in front of the vehicle
+updateBeliefs (in BeliefInitial):
+
+Detects: RedLight = true (via lane.isTrafficLightGreen())
+
+Detects: CarAhead = false
+
+perceivedEnvironment (in Vehicle):
+
+Calculates: CollisionRisk = false (because no car in front)
+
+Check: NearDestination = false (via distance calculation)
+ */
+
 import org.example.environment.Environment;
 import org.example.environment.Lane;
 import org.example.environment.Road;
@@ -8,19 +34,27 @@ import org.example.logic.*;
 import java.util.*;
 
 public class Vehicle {
+    //bdi
     private BeliefInitial beliefs;
     private List<Desire> desires;
     private List<Goal> goals;
     private Queue<Intention> intentions;
+
+    //positions
     private Position position;
     private Position destination;
     private Lane currentLane;
     private static final double SAFE_BRAKING_DISTANCE = 20.0;
     private double preciseX;
     private Road road;
-    Lane leftLane;
     private static int nextId = 1;
     private final int id;
+
+    //metrics
+    private long startTime;
+    private int laneChangeCount = 0;
+    private int frustrationCount = 0;
+    private Long endTime = null;
 
     public Vehicle(Position position, Position destination) {
         this.id = nextId++;
@@ -31,6 +65,7 @@ public class Vehicle {
         this.position = position;
         this.destination = destination;
         this.preciseX = position.getX();
+        this.startTime = System.currentTimeMillis();
         initializeGoals();
     }
 
@@ -41,29 +76,39 @@ public class Vehicle {
         intentions.add(intention);
     }
 
+    public double getTravelTimeSeconds() {
+        long end = endTime != null ? endTime : System.currentTimeMillis();
+        return (end - startTime) / 1000.0;
+    }
+
+    public int getLaneChangeCount() {
+        return laneChangeCount;
+    }
+
+    public int getFrustrationCount() {
+        return frustrationCount;
+    }
+
     private void initializeGoals() {
-        // Primary goals
+        //primary goals
         Goal reachDest = new Goal(
                 new Desire("REACH_DESTINATION",1),
                 new AtomFormula("AtDestination", true)
         );
+        Goal obeyRules = new Goal(
+                new Desire("OBEY_TRAFFIC_RULES", 1),
+                new AtomFormula("TrafficRulesObeyed", true)
+        );
+        //secondary goals
 
         Goal avoidCollision = new Goal(
                 new Desire("AVOID_COLLISION", 2),
                 new NotFormula(new AtomFormula("CollisionRisk", true))
         );
 
-        // Secondary goals
-        Goal obeyRules = new Goal(
-                new Desire("OBEY_TRAFFIC_RULES", 1),
-                new AtomFormula("TrafficRulesObeyed", true)
-        );
         Goal avoidJam = new Goal(
                 new Desire("AVOID_TRAFFIC_JAM", 2),
-                new AndFormula(
-                        new NotFormula(new AtomFormula("InTrafficJam", true)),
-                        new AtomFormula("Moving", true)
-                )
+                        new NotFormula(new AtomFormula("InTrafficJam", true))
         );
 
         goals.add(reachDest);
@@ -71,7 +116,6 @@ public class Vehicle {
         goals.add(obeyRules);
         goals.add(avoidJam);
 
-        // Ajouter les désirs correspondants
         desires.add(reachDest.getDesire());
         desires.add(avoidCollision.getDesire());
         desires.add(obeyRules.getDesire());
@@ -82,27 +126,22 @@ public class Vehicle {
     public void perceivedEnvironment(Lane lane, Road road){
         beliefs.updateBeliefs(lane,road,this);
 
-
         double distanceToDest = position.distanceTo(destination);
         boolean arrived = distanceToDest < 5.0;
 
         beliefs.addBelief(new Belief("AtDestination", distanceToDest < 5.0));
         beliefs.addBelief(new Belief("NearDestination", distanceToDest < 15.0));
         beliefs.addBelief(new Belief("HighSpeed",
-                position.distanceTo(destination) > 10 &&  // Pas trop près de la destination
-                        lane.getVehicleSpeed(this) > 30.0));  // Seuil plus réaliste
+                position.distanceTo(destination) > 10 &&
+                        lane.getVehicleSpeed(this) > 30.0));
 
-        // Autres croyances importantes
         beliefs.addBelief(new Belief("HighSpeed", lane.getVehicleSpeed(this) > 50.0));
         beliefs.addBelief(new Belief("CollisionRisk",
                 beliefs.contains("CarAhead", true) && beliefs.contains("HighSpeed", true)));
-        if (!intentions.isEmpty()) {
-            beliefs.addBelief(new Belief("Moving", true));
-        } else {
-            beliefs.addBelief(new Belief("Moving", false));
-        }
+
+
         if (arrived) {
-            // Désactiver tous les désirs sauf REACH_DESTINATION
+            //only keep reach_destination
             desires.stream()
                     .filter(d -> !d.getName().equals("REACH_DESTINATION"))
                     .forEach(Desire::achieve);
@@ -110,46 +149,45 @@ public class Vehicle {
     }
 
     private void updateDesires() {
-        // Réinitialiser l'état des désirs
+        //res
         desires.forEach(Desire::reset);
 
-        // Mettre à jour l'état d'accomplissement
+        //update achievements state
         for (Goal goal : goals) {
             if (goal.isAchieved(beliefs)) {
                 goal.getDesire().achieve();
             } else {
-                // S'assurer que le désir est dans la liste
                 if (!desires.contains(goal.getDesire())) {
                     desires.add(goal.getDesire());
                 }
             }
         }
 
-        // Trier par priorité
+        //priority sort
         desires.sort(Comparator.comparingInt(Desire::getPriority));
     }
 
     private void deliberate() {
-        // Trier les désirs par priorité (les non-accomplis en premier)
+        //non-accomplish at first
         List<Desire> activeDesires = desires.stream()
                 .filter(d -> !d.isAchieved())
                 .sorted(Comparator.comparingInt(Desire::getPriority))
                 .toList();
 
         if (!activeDesires.isEmpty()) {
-            generateIntentions(activeDesires.get(0)); // Traiter le désir le plus prioritaire
+            generateIntentions(activeDesires.get(0));
         }
     }
 
     private void plan() {
-        // Ici on pourrait ajouter une vraie planification
-        // Pour l'instant on utilise simplement la file d'intentions
+        //planif project.
+        //attention Queue only use
     }
 
     private void generateIntentions(Desire desire) {
         intentions.clear();
 
-        // Création des formules atomiques de base
+        //Atom basics formulas
         LogicalFormula feuVert = new AtomFormula("FeuVert", true);
         LogicalFormula feuRouge = new AtomFormula("FeuRouge", true);
         LogicalFormula carAhead = new AtomFormula("CarAhead", true);
@@ -161,26 +199,24 @@ public class Vehicle {
         LogicalFormula nearDestination = new AtomFormula("NearDestination", true);
         LogicalFormula highSpeed = new AtomFormula("HighSpeed", true);
 
-        // Calcul de la distance au feu le plus proche
-        double distanceToLight = getDistanceToNextLight();
+        double distanceToLight = getDistanceToNextLight(); //distance of the nextLight
         boolean isRedLightNear = beliefs.contains("FeuRouge", true) &&
                 distanceToLight < SAFE_BRAKING_DISTANCE;
 
-        // Priorité absolue au feu rouge proche
         if (isRedLightNear) {
             intentions.add(Intention.STOP);
-            return; // On ignore les autres désirs si le feu rouge est proche
+            return;
         }
 
         switch (desire.getName()) {
             case "REACH_DESTINATION":
-                // Règle 1: Si près de la destination → Ralentir
+                //rule If near destination  => SLOW_DOWN
                 if (nearDestination.evaluate(beliefs)) {
                     intentions.add(Intention.SLOW_DOWN);
                     break;
                 }
 
-                // Règle 2: Si feu vert ET pas de voiture devant ET pas d'obstacle → Accélérer
+                //rule If light green and not carAhead and not obstacleAhead => Accelerate
                 LogicalFormula canAccelerate = new AndFormula(
                         feuVert,
                         new AndFormula(
@@ -189,7 +225,7 @@ public class Vehicle {
                         )
                 );
 
-                // Règle 3: Si obstacle devant → Changer de voie si possible
+                //rule: If obstacleAhead => change lane if possible
                 LogicalFormula avoidObstacle = new AndFormula(
                         obstacle,
                         new OrFormula(
@@ -198,7 +234,7 @@ public class Vehicle {
                         )
                 );
 
-                // Règle 4: Si voiture devant ET voie libre → Changer de voie
+                //rule: if carAheaddevant and free Lane => Change lane
                 LogicalFormula canOvertake = new AndFormula(
                         carAhead,
                         new OrFormula(
@@ -207,7 +243,7 @@ public class Vehicle {
                         )
                 );
 
-                // Évaluation hiérarchique des règles
+                //Hierarchical evaluation of rules
                 if (canAccelerate.evaluate(beliefs)) {
                     intentions.add(Intention.ACCELERATE);
                 }
@@ -228,7 +264,7 @@ public class Vehicle {
                 break;
 
             case "AVOID_COLLISION":
-                // Règle 1: Risque de collision imminent → Freinage d'urgence
+                //rule: Imminent risk of collision => Emergency braking
                 LogicalFormula emergency = new AndFormula(
                         carAhead,
                         highSpeed
@@ -240,9 +276,8 @@ public class Vehicle {
                 break;
 
             case "OBEY_TRAFFIC_RULES":
-                // Règle 1: Feu rouge ou véhicule prioritaire → S'arrêter
+                //rule: Red light or priority vehicle => Stop
                 LogicalFormula mustStop = new OrFormula(feuRouge, priorityVehicle);
-
                 if (mustStop.evaluate(beliefs)) {
                     double distToLight = getDistanceToNextLight();
 
@@ -255,7 +290,7 @@ public class Vehicle {
                 break;
 
             case "AVOID_TRAFFIC_JAM":
-                // Règle: Embouteillage ET voie alternative libre → Changer de voie
+                //rule: Traffic jam AND free alternative lane → Change lane
                 LogicalFormula changeLane = new AndFormula(
                         inTrafficJam,
                         new OrFormula(
@@ -270,7 +305,7 @@ public class Vehicle {
                 break;
         }
 
-        // Comportement par défaut si aucune intention n'a été générée
+        //default behavior
         if (intentions.isEmpty()) {
             if (beliefs.contains("FeuRouge", true)) {
                 intentions.add(Intention.SLOW_DOWN);
@@ -280,18 +315,9 @@ public class Vehicle {
         }
     }
 
-    private boolean isVehicleStoppedAhead(Lane lane) {
-        Vehicle ahead = lane.getVehicleAhead(this);
-        return ahead != null &&
-                (ahead.getIntentions().contains(Intention.STOP) ||
-                        ahead.getIntentions().contains(Intention.WAIT));
-    }
     private void updatePostActionBeliefs() {
-        boolean hasMoved = !position.equals(previousPosition);
-        beliefs.addBelief(new Belief("Moving", hasMoved));
         previousPosition = new Position(position.getX(), position.getY());
     }
-
 
     private List<Intention> executedIntentions = new ArrayList<>();
     public void act() {
@@ -309,16 +335,18 @@ public class Vehicle {
         }
 
         if (beliefs.contains("AtDestination", true)) {
+            if(endTime == null){
+                endTime = System.currentTimeMillis();
+            }
             System.out.println("Véhicule arrivé à destination");
             return;
         }
 
-        // Vérification constante du feu rouge
+        Road.RoadCondition condition = road.getCondition();
         double distanceToLight = getDistanceToNextLight();
         boolean isRedLightNear = beliefs.contains("FeuRouge", true) &&
                 distanceToLight < SAFE_BRAKING_DISTANCE;
 
-        // Si feu rouge proche, forcer l'arrêt
         if (isRedLightNear && intention != Intention.STOP) {
             intentions.clear();
             intentions.add(Intention.STOP);
@@ -326,6 +354,14 @@ public class Vehicle {
         }
 
         int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
+
+        if (intention == Intention.TURN_LEFT || intention == Intention.TURN_RIGHT || intention == Intention.CHANGE_LANE) {
+            laneChangeCount++;
+        }
+
+        if (beliefs.contains("InTrafficJam", true) || beliefs.contains("ObstacleAhead", true)) {
+            frustrationCount++;
+        }
 
         switch (intention) {
             case ACCELERATE:
@@ -412,10 +448,12 @@ public class Vehicle {
         // Mise à jour des croyances post-action
         updatePostActionBeliefs();
     }
+
+    // gets
     private double getDistanceToNextLight() {
         // Trouver le feu le plus proche devant le véhicule
         for (TrafficLight light : road.getTrafficLights()) {
-            double lightX = 30; // Position du feu (devrait être stockée dans TrafficLight)
+            double lightX = 100; // Position du feu (devrait être stockée dans TrafficLight)
             if (lightX > position.getX()) { // Feu devant le véhicule
                 return lightX - position.getX();
             }
@@ -441,6 +479,15 @@ public class Vehicle {
     public BeliefInitial getBeliefs() {return beliefs;}
     public int getId() {
         return this.id;
+    }
+
+    //no use but maybe later:
+
+    private boolean isVehicleStoppedAhead(Lane lane) {
+        Vehicle ahead = lane.getVehicleAhead(this);
+        return ahead != null &&
+                (ahead.getIntentions().contains(Intention.STOP) ||
+                        ahead.getIntentions().contains(Intention.WAIT));
     }
 
 }

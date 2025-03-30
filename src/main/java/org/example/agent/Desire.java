@@ -1,3 +1,7 @@
+/*
+allows you to create a desire according to a name and its priority, 1 = strong 2 = important etc., and a state of fulfillment.
+ */
+
 package org.example.agent;
 
 public class Desire {
@@ -11,12 +15,6 @@ public class Desire {
         this.isAchieved = false;
     }
 
-    public String getName() {
-        return name;
-    }
-    public int getPriority() {
-        return priority;
-    }
     public boolean isAchieved() {
         return isAchieved;
     }
@@ -28,5 +26,12 @@ public class Desire {
     }
     public void reset() {
         this.isAchieved = false;
+    }
+
+    public String getName() {
+        return name;
+    }
+    public int getPriority() {
+        return priority;
     }
 }

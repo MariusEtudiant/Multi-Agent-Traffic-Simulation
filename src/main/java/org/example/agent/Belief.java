@@ -1,3 +1,7 @@
+/*
+Class used to create a belief, with a name and a value
+ */
+
 package org.example.agent;
 
 import java.util.Objects;
@@ -10,6 +14,8 @@ public class Belief {
         this.name = name;
         this.value = value;
     }
+
+    //get
     public String getName() {
         return name;
     }

@@ -1,3 +1,7 @@
+/*
+Better management of objectives based on a desire and its modal logic of success, greatly simplifies processing
+ */
+
 package org.example.agent;
 
 import org.example.logic.LogicalFormula;
