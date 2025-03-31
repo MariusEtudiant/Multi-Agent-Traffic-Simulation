@@ -22,7 +22,7 @@ Logical formulas: AndFormula, NotFormula, AtomFormula
 Environment: Lane, Road, TrafficLight classes
 
 How to Run
-Clone repository
+Clone repository https://github.com/MariusEtudiant/Multi-Agent-Traffic-Simulation.git
 
 Copy
 exucute the main file main.java which contain all implémentation of the scenario, change as you want to test it 
