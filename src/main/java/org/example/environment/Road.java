@@ -11,15 +11,23 @@ import java.util.List;
 public class Road {
     private final String id;
     private final double length;
-    private static final int maxCapacity = 15;
+    private static final int maxCapacity = 40;
     private final List<Position> entryPoints;  // entry points/end (intersections etc)
     private final List<TrafficLight> trafficLights;
     private final List<Lane> lanes;
     private boolean isCongested;
+    private RoadCondition condition = RoadCondition.DRY;
+    private static final double APPROACH_DISTANCE = 50.0;
+    private static final double CONGESTION_THRESHOLD = 0.8;
 
+
+    // MDP control parameters
+    private boolean useMDP = true;
+    private int mdpDecisionInterval = 5;
+    private int stepCounter = 0;
 
     // Construct
-    public Road(String id, double length, int maxCapacity, List<Position> entryPoints) {
+    public Road(String id, double length, List<Position> entryPoints) {
         this.id = id;
         this.length = length;
         this.entryPoints = entryPoints;
@@ -41,7 +49,6 @@ public class Road {
             return frictionFactor;
         }
     }
-    private RoadCondition condition = RoadCondition.DRY;
 
     public void setCondition(RoadCondition condition) {
         this.condition = condition;
@@ -90,4 +97,103 @@ public class Road {
         return trafficLights;
     }
 
+    private void coordinateTrafficLights() {
+        if (trafficLights.size() <= 1) return;
+
+        // Trouver le feu avec le plus de trafic
+        TrafficLight busiestLight = null;
+        int maxTraffic = -1;
+
+        for (TrafficLight light : trafficLights) {
+            int trafficValue = light.getCurrentTraffic().ordinal();
+            if (trafficValue > maxTraffic) {
+                maxTraffic = trafficValue;
+                busiestLight = light;
+            }
+        }
+
+        // Mettre le feu le plus chargé au vert, les autres au rouge
+        if (busiestLight != null) {
+            for (TrafficLight light : trafficLights) {
+                if (light == busiestLight) {
+                    if (light.getState() != TrafficLight.LightColor.GREEN) {
+                        light.executeAction("SWITCH_GREEN");
+                    }
+                } else {
+                    if (light.getState() != TrafficLight.LightColor.RED) {
+                        light.executeAction("SWITCH_RED");
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean checkCongestion() {
+        final double CONGESTION_THRESHOLD = 0.8;
+        int totalVehicles = lanes.stream().mapToInt(Lane::getVehicleCount).sum();
+        return totalVehicles > maxCapacity * CONGESTION_THRESHOLD;
+    }
+
+    // New methods for MDP control
+    public void enableMDP(boolean enable) {
+        this.useMDP = enable;
+    }
+
+    public void setMDPDecisionInterval(int interval) {
+        this.mdpDecisionInterval = interval;
+    }
+
+    public void trainTrafficLights() {
+        for (TrafficLight light : trafficLights) {
+            light.printTransitionMatrix();
+            light.valueIteration(0.01);
+            light.printPolicy();
+        }
+    }
+
+    public int countVehiclesApproaching(TrafficLight light) {
+        final double APPROACH_DISTANCE = 50.0; // constante pour la distance
+        Position lightPosition = getLightPosition(light.getId());
+
+        return (int) lanes.stream()
+                .flatMap(lane -> lane.getVehicles().stream())
+                .filter(v -> v.getPosition().distanceTo(lightPosition) < APPROACH_DISTANCE)
+                .count();
+    }
+
+    private Position getLightPosition(String lightId) {
+        // Méthode simplifiée - à adapter selon votre implémentation réelle
+        // Par défaut, retourne la position de fin de route
+        return entryPoints.get(entryPoints.size() - 1);
+    }
+
+    public void updateTrafficLights() {
+        // 1. Mettre à jour les niveaux de trafic pour chaque feu
+        for (TrafficLight light : trafficLights) {
+            int vehicleCount = countVehiclesApproaching(light);
+            light.updateTrafficLevel(vehicleCount);
+        }
+
+        // 2. Prendre des décisions MDP pour chaque feu
+        for (TrafficLight light : trafficLights) {
+            light.mdpUpdate();
+        }
+
+        // 3. Appliquer la coordination entre feux
+        coordinateTrafficLights();
+
+        // 4. Mettre à jour l'état des feux
+        for (TrafficLight light : trafficLights) {
+            light.update();
+        }
+    }
+    public void updateTrafficConditions() {
+        this.isCongested = checkCongestion();
+        // Mettre à jour les probabilités de transition basées sur le trafic global
+        for (TrafficLight light : trafficLights) {
+            int vehicleCount = countVehiclesApproaching(light);
+            light.updateTrafficLevel(vehicleCount);
+            light.updatePolicy(); // Recalculer la politique
+        }
+    }
 }

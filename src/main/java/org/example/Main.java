@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.example.environment.TrafficLight.LightColor.GREEN;
+
 /*
 ALL simulations implementations, car, obstacles etc
 Will be updated for the next part with better interface and more complexes scenarios
@@ -21,12 +23,13 @@ Will be updated for the next part with better interface and more complexes scena
 public class Main {
     private static List<Vehicle> allVehiclesEverCreated = new ArrayList<>();
     public static void main(String[] args) {
+        System.out.println("Démarrage de la simulation...");
         // Créer l'environnement
         Environment env = new Environment();
-
+        System.out.println("Environnement créé"); // <-- Log de progression
         // Création d'une route de 100m de long avec une capacité de 10 véhicules
         List<Position> entryPoints = List.of(new Position(0, 0), new Position(100, 0));
-        Road road = new Road("R1", 100.0, 10, entryPoints);
+        Road road = new Road("R1", 100.0, entryPoints);
 
         road.setCondition(Road.RoadCondition.WET);
 
@@ -37,8 +40,12 @@ public class Main {
         road.addLane(lane2);
 
         // Ajouter un feu de circulation
-        TrafficLight trafficLight = new TrafficLight("R1", "GREEN");
+        TrafficLight trafficLight = new TrafficLight("R1", GREEN);
         road.addTrafficLight(trafficLight, new Position(100, 0));
+
+        road.trainTrafficLights();// Train the MDP policies
+        road.enableMDP(true); // Enable MDP control
+        road.setMDPDecisionInterval(3); // Make decisions every 5 steps
 
         Obstacle barriere = new Obstacle(new Position(30,1));
         Obstacle debris = new Obstacle(new Position(95,1));
@@ -61,7 +68,6 @@ public class Main {
         Vehicle vehicle10 = new Vehicle(new Position(92, -1), destination);
 
 
-
         allVehiclesEverCreated.add(vehicle1);
         allVehiclesEverCreated.add(vehicle2);
         allVehiclesEverCreated.add(vehicle3);
@@ -73,6 +79,7 @@ public class Main {
         allVehiclesEverCreated.add(vehicle9);
         allVehiclesEverCreated.add(vehicle10);
 
+
         lane.addVehicle(vehicle1);
         lane.addVehicle(vehicle2);
         lane.addVehicle(vehicle3);
@@ -80,9 +87,7 @@ public class Main {
         lane.addVehicle(vehicle5);
         lane2.addVehicle(vehicle6);
         lane2.addVehicle(vehicle7);
-        lane2.addVehicle(vehicle8);
-        lane2.addVehicle(vehicle9);
-        lane2.addVehicle(vehicle10);
+
 
         lane.addObstacle(barriere);
         lane2.addObstacle(debris);
@@ -93,11 +98,13 @@ public class Main {
         System.out.println(road);
         System.out.println("Congested? " + road.isCongested());  // false
 
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 20; i++) {
             System.out.println("=== Étape " + (i + 1) + " ===");
 
+            road.updateTrafficConditions();
+
             // Alterner l'état des feux
-            trafficLight.update();
+            road.updateTrafficLights();
 
             List<Vehicle> lane1Vehicles = new ArrayList<>(lane.getVehicles());
             List<Vehicle> lane2Vehicles = new ArrayList<>(lane2.getVehicles());

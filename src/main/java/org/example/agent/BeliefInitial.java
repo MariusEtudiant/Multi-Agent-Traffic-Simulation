@@ -18,8 +18,12 @@ package org.example.agent;
 
 import org.example.environment.Lane;
 import org.example.environment.Road;
+import org.example.environment.TrafficLight;
+
 import java.util.HashSet;
 import java.util.Set;
+
+import static org.example.environment.TrafficLight.LightColor.*;
 
 public class BeliefInitial {
     private Set<Belief> beliefs;
@@ -32,9 +36,22 @@ public class BeliefInitial {
         beliefs.clear();
 
         // Feux de circulation
-        boolean isGreen = lane.isTrafficLightGreen(road, road.getId());
-        addBelief(new Belief("FeuVert", isGreen));
-        addBelief(new Belief("FeuRouge", !isGreen));
+        TrafficLight.LightColor color = lane.checkState(road, road.getId());
+        if (color == RED) {  // Utilisez == pour les enum
+            addBelief(new Belief("FeuRED", true));
+            addBelief(new Belief("FeuOrange", false));
+            addBelief(new Belief("FeuVert", false));
+        } else if (color == GREEN) {
+            addBelief(new Belief("FeuVert", true));
+            addBelief(new Belief("FeuOrange", false));
+            addBelief(new Belief("FeuRED", false));
+        } else if (color == ORANGE) {  // Ajout explicite pour orange
+            addBelief(new Belief("FeuOrange", true));
+            addBelief(new Belief("FeuRED", false));
+            addBelief(new Belief("FeuVert", false));
+        } else {
+            System.out.println("Etat inconnu: " + color);
+        }
 
 
         // Détection des véhicules

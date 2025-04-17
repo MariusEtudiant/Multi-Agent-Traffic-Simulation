@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import static org.example.environment.TrafficLight.LightColor.*;
+
 public class Lane {
     private final String id;
     private final double width;
@@ -25,7 +27,7 @@ public class Lane {
     public static final int DIRECTION_RIGHT = 0;   // Sens croissant X
     public static final int DIRECTION_LEFT = 180;  // Sens décroissant X
 
-    public Lane(String id, double width, double centerY,int direction, Road road) {
+    public Lane(String id, double width, double centerY, int direction, Road road) {
         this.id = id;
         this.width = width;
         this.centerY = centerY;
@@ -34,6 +36,7 @@ public class Lane {
         this.obstacles = new ArrayList<>();
         this.road = road;
     }
+
     public void setRoad(Road road) {
         this.road = road;
     }
@@ -44,7 +47,10 @@ public class Lane {
         }
         vehicles.add(vehicle);
     }
-    public void addObstacle(Obstacle obstacle){obstacles.add(obstacle);}
+
+    public void addObstacle(Obstacle obstacle) {
+        obstacles.add(obstacle);
+    }
 
     public boolean isCarAhead(Vehicle vehicle) {
         Position currentPos = vehicle.getPosition();
@@ -112,6 +118,7 @@ public class Lane {
         System.out.println("Aucun véhicule détecté à gauche.");
         return false;
     }
+
     public boolean isCarOnRight(Vehicle vehicle) {
         for (Vehicle other : vehicles) {
             if (!other.equals(vehicle)) {
@@ -125,9 +132,11 @@ public class Lane {
         System.out.println("Aucun véhicule détecté à droite.");
         return false;
     }
+
     public boolean removeVehicle(Vehicle vehicle) {
         return vehicles.remove(vehicle);
     }
+
     public void removeArrivedVehicles() {
         Iterator<Vehicle> iterator = vehicles.iterator();
         while (iterator.hasNext()) {
@@ -155,16 +164,16 @@ public class Lane {
         return false;
     }
 
-    public boolean isTrafficLightGreen(Road road, String routeId) {
+    public TrafficLight.LightColor checkState(Road road, String routeId) {
         List<TrafficLight> lights = road.getTrafficLights();
         for (TrafficLight trafficLight : lights) {
             if (trafficLight.getId().equals(routeId)) {
                 System.out.println("Feu de circulation " + routeId + " est " + trafficLight.getState());
-                return trafficLight.getState().equals("GREEN");
+                return trafficLight.getState();
             }
         }
-        System.out.println("Feu de circulation " + routeId + " non trouvé.");
-        return false;
+        System.err.println("AUCUN FEU TROUVÉ POUR: " + routeId); // Erreur visible
+        return null;
     }
 
     public boolean isInTrafficJam() {
@@ -204,7 +213,7 @@ public class Lane {
     //next implementations
     public double getVehicleSpeed(Vehicle vehicle) {
         // Vitesse de base réduite si feu rouge ou obstacle
-        if (!isTrafficLightGreen(road, road.getId())) {
+        if (checkState(road, road.getId()) == RED) {
             return 0.0;
         }
         if (isObstacleAhead(vehicle)) {
