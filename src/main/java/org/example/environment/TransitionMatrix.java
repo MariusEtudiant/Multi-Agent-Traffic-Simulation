@@ -12,17 +12,20 @@ public class TransitionMatrix {
     public TransitionMatrix() {
         this.transitions = new HashMap<>();
         // Matrice de changement de trafic: P(next_traffic | current_traffic)
+        // Matrice plus progressive pour l'évolution du trafic
         this.trafficChangeMatrix = new double[][]{
                 // NONE   MEDIUM  HEAVY
-                {0.6,    0.3,    0.1},   // Après NONE
-                {0.2,    0.5,    0.3},    // Après MEDIUM
-                {0.1,    0.3,    0.6}     // Après HEAVY
+                {0.5,    0.3,    0.2},   // Après NONE
+                {0.4,    0.3,    0.3},    // Après MEDIUM
+                {0.2,    0.4,    0.4}      // Après HEAVY
         };
         initializeRealisticTransitions();
     }
+    public double[] getTrafficTransitionProbs(TrafficLight.TrafficLevel level) {
+        return trafficChangeMatrix[level.ordinal()];
+    }
 
     private void initializeRealisticTransitions() {
-        // États possibles
         String[] colors = {"GREEN", "ORANGE", "RED"};
         String[] levels = {"NONE", "MEDIUM", "HEAVY"};
 
@@ -30,35 +33,35 @@ public class TransitionMatrix {
             for (String currentLevel : levels) {
                 String currentState = color + "_" + currentLevel;
                 Map<String, Double> stateTransitions = new HashMap<>();
-
                 int currentLevelIdx = TrafficLight.TrafficLevel.valueOf(currentLevel).ordinal();
 
-                // 1. Transition de couleur (dépend de l'action, mais modélisons les changements naturels)
+                // 1. Transition de couleur plus réaliste
                 if ("ORANGE".equals(color)) {
-                    // L'orange passe naturellement au rouge après un certain temps
-                    stateTransitions.put("RED_" + currentLevel, 0.95);
-                    stateTransitions.put("GREEN_" + currentLevel, 0.05); // Cas rare
-                } else {
-                    // Autres couleurs tendent à rester stables
-                    stateTransitions.put(color + "_" + currentLevel, 0.6);
-                    stateTransitions.put((color.equals("GREEN") ? "ORANGE" : "GREEN") + "_" + currentLevel, 0.4);
+                    // Orange passe principalement à Rouge (80%) ou parfois à Vert (20%)
+                    stateTransitions.put("RED_" + currentLevel, 0.8);
+                    stateTransitions.put("GREEN_" + currentLevel, 0.2);
+                } else if ("GREEN".equals(color)) {
+                    // Vert reste Vert (70%) ou passe à Orange (30%)
+                    stateTransitions.put("GREEN_" + currentLevel, 0.7);
+                    stateTransitions.put("ORANGE_" + currentLevel, 0.3);
+                } else { // RED
+                    // Rouge reste Rouge (60%) ou passe à Vert (40%)
+                    stateTransitions.put("RED_" + currentLevel, 0.6);
+                    stateTransitions.put("GREEN_" + currentLevel, 0.4);
                 }
-
-                // 2. Transition de trafic (dépend du niveau actuel)
+                // 2. Transition de trafic plus progressive
                 for (String nextLevel : levels) {
                     int nextLevelIdx = TrafficLight.TrafficLevel.valueOf(nextLevel).ordinal();
                     double trafficProb = trafficChangeMatrix[currentLevelIdx][nextLevelIdx];
 
-                    // Combiner avec les transitions de couleur
+                    // Répartir les probabilités de manière plus équilibrée
                     for (String nextColor : colors) {
                         String nextState = nextColor + "_" + nextLevel;
-                        stateTransitions.merge(nextState,
-                                ("ORANGE".equals(color) ? 0.2 : 0.05) * trafficProb,
-                                Double::sum);
+                        // Réduire l'impact des transitions extrêmes
+                        stateTransitions.merge(nextState, trafficProb * 0.3, Double::sum);
                     }
                 }
 
-                // Normalisation (simplifiée)
                 transitions.put(currentState, normalizeProbabilities(stateTransitions));
             }
         }

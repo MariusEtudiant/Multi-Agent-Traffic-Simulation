@@ -17,14 +17,11 @@ public class Road {
     private final List<Lane> lanes;
     private boolean isCongested;
     private RoadCondition condition = RoadCondition.DRY;
-    private static final double APPROACH_DISTANCE = 50.0;
-    private static final double CONGESTION_THRESHOLD = 0.8;
 
 
     // MDP control parameters
     private boolean useMDP = true;
     private int mdpDecisionInterval = 5;
-    private int stepCounter = 0;
 
     // Construct
     public Road(String id, double length, List<Position> entryPoints) {
@@ -43,10 +40,6 @@ public class Road {
 
         RoadCondition(double frictionFactor) {
             this.frictionFactor = frictionFactor;
-        }
-
-        public double getFrictionFactor() {
-            return frictionFactor;
         }
     }
 

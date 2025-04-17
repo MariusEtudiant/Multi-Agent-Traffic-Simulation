@@ -1,5 +1,6 @@
 package org.example.environment;
 
+import java.io.PrintWriter;
 import java.util.*;
 
 import static org.example.environment.TrafficLight.LightColor.GREEN;
@@ -23,9 +24,9 @@ public class TrafficLight {
 
     // Q-learning parameters
     private Map<String, Map<String, Double>> qTable;
-    private double alpha = 0.2; // Learning rate
+    private double alpha = 0.5; // Learning rate
     private double gamma = 0.9; // Discount factor
-    private double epsilon = 0.2; // Exploration rate
+    private double epsilon = 0.1; // Exploration rate
 
     private final TransitionMatrix transitionMatrix = new TransitionMatrix();
 
@@ -146,21 +147,24 @@ public class TrafficLight {
     }
 
     private double calculateReward(LightColor color, TrafficLevel level) {
-
+        // Récompenses plus équilibrées qui encouragent les changements quand nécessaire
         switch (color) {
             case GREEN:
                 switch (level) {
-                    case NONE: return 1.0;
-                    case MEDIUM: return 2.0;
-                    case HEAVY: return 0.5;
+                    case NONE: return 1.0;   // Bonne situation
+                    case MEDIUM: return 3.0; // Meilleure récompense pour trafic moyen (feu vert utile)
+                    case HEAVY: return 5.0; // Légère pénalité pour trafic lourd
                 }
             case ORANGE:
-                return -1.0;
+                return -1.0; // Pénalité modérée pour orange
             case RED:
-                return level == TrafficLevel.NONE ? -1.0 :
-                        (level == TrafficLevel.MEDIUM ? -3.0 : -8.0);
-            default:
-                return 0.0;
+                return switch (level) {
+                    case NONE -> -3.0; // Encourager le changement
+                    case MEDIUM -> -6.0;
+                    case HEAVY -> -10.0;
+                };
+
+            default: return 0.0;
         }
     }
 
@@ -191,59 +195,94 @@ public class TrafficLight {
         extractPolicy();
     }
     private double getActionPenalty(String action) {
-        return action.startsWith("STAY_") ? -1.5 : 0; // Pénalité importante pour rester
+        // Réduire la pénalité pour rester (encourager plus de changements)
+        return action.startsWith("STAY_") ? -2 : 0.3;
+    }
+    private double[] getTrafficTransitionProbs(TrafficLevel currentLevel) {
+        return transitionMatrix.getTrafficTransitionProbs(currentLevel);
     }
 
-    private double calculateActionValue(LightColor color, TrafficLevel level, String action, double gamma) {
-        double total = 0;
-        String state = getStateKey(color, level);
 
-        // Pénalité d'inaction ajoutée
-        double actionPenalty = getActionPenalty(action);
-
-        for (LightColor newColor : LightColor.values()) {
-            for (TrafficLevel newLevel : TrafficLevel.values()) {
-                String nextState = getStateKey(newColor, newLevel);
-                double prob = transitionMatrix.getProbability(state, nextState);
-                double reward = calculateReward(newColor, newLevel) + actionPenalty;
-                total += prob * (reward + gamma * valueFunction[newColor.ordinal()][newLevel.ordinal()]);
-            }
+    private LightColor applyAction(LightColor current, String action) {
+        switch (action) {
+            case "SWITCH_GREEN": return LightColor.GREEN;
+            case "SWITCH_ORANGE": return LightColor.ORANGE;
+            case "SWITCH_RED": return LightColor.RED;
+            default: return current;
         }
+    }
+
+
+
+    private double calculateActionValue(LightColor color, TrafficLevel level, String action, double gamma) {
+        double total = 0.0;
+
+        // 1. Couleur suivante déterminée par l'action
+        LightColor nextColor = applyAction(color, action);
+
+        // 2. Probabilités d'évolution du trafic (indépendantes de l'action)
+        double[] trafficProbs = getTrafficTransitionProbs(level);
+
+        // 3. Boucle sur les niveaux de trafic possibles
+        for (int i = 0; i < trafficProbs.length; i++) {
+            TrafficLevel nextLevel = TrafficLevel.values()[i];
+            double probability = trafficProbs[i];
+
+            double reward = calculateReward(nextColor, nextLevel) + getActionPenalty(action);
+            double futureValue = valueFunction[nextColor.ordinal()][nextLevel.ordinal()];
+
+            total += probability * (reward + gamma * futureValue);
+        }
+
         return total;
     }
 
+
     private void extractPolicy() {
         policy = new HashMap<>();
+        double gammaLocal = 0.8; // même valeur que dans valueIteration
 
         for (LightColor color : LightColor.values()) {
             for (TrafficLevel level : TrafficLevel.values()) {
-                double maxValue = Double.NEGATIVE_INFINITY;
-                String bestAction = null;
+                String stateKey = getStateKey(color, level);
+                double bestValue = Double.NEGATIVE_INFINITY;
+                String bestAction = "STAY_" + color.name(); // valeur par défaut
 
                 for (String action : getPossibleActions(color)) {
-                    double actionValue = 0;
-
-                    // Utiliser la vraie matrice de transition
-                    for (LightColor newColor : LightColor.values()) {
-                        for (TrafficLevel newLevel : TrafficLevel.values()) {
-                            String state = getStateKey(color, level);
-                            String nextState = getStateKey(newColor, newLevel);
-                            double prob = transitionMatrix.getProbability(state, nextState);
-                            double reward = calculateReward(newColor, newLevel);
-                            actionValue += prob * (reward + gamma * valueFunction[newColor.ordinal()][newLevel.ordinal()]);
-                        }
-                    }
-
-                    if (actionValue > maxValue) {
-                        maxValue = actionValue;
+                    double actionValue = calculateActionValue(color, level, action, gammaLocal);
+                    if (actionValue > bestValue) {
+                        bestValue = actionValue;
                         bestAction = action;
                     }
                 }
 
-                policy.put(getStateKey(color, level), bestAction);
+                policy.put(stateKey, bestAction);
+                valueFunction[color.ordinal()][level.ordinal()] = bestValue;
             }
         }
     }
+
+
+    public void exportPolicyToCSV(String filePath) {
+        try (PrintWriter writer = new PrintWriter(filePath)) {
+            writer.println("TrafficLevel,GREEN,ORANGE,RED");
+
+            for (TrafficLevel level : TrafficLevel.values()) {
+                StringBuilder line = new StringBuilder(level.name());
+                for (LightColor color : LightColor.values()) {
+                    String state = getStateKey(color, level);
+                    String action = policy.getOrDefault(state, "AUCUNE");
+                    line.append(",").append(action);
+                }
+                writer.println(line);
+            }
+
+            System.out.println("✅ Politique exportée vers : " + filePath);
+        } catch (Exception e) {
+            System.out.println("❌ Erreur d'export : " + e.getMessage());
+        }
+    }
+
 
     public void printTransitionMatrix() {
         System.out.println("Matrice de Transition Complète:");
