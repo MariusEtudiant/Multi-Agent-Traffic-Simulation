@@ -1,6 +1,7 @@
 package org.example;
 
-import org.example.agent.Desire;
+import org.example.ArgumentationDM.DungGraphPanel;
+import org.example.ArgumentationDM.TransportationAgent;
 import org.example.agent.Vehicle;
 import org.example.environment.Environment;
 import org.example.environment.Obstacle;
@@ -8,191 +9,309 @@ import org.example.environment.Road;
 import org.example.environment.TrafficLight;
 import org.example.agent.Position;
 import org.example.environment.Lane;
+import org.tweetyproject.arg.dung.reasoner.SimpleGroundedReasoner;
+import org.tweetyproject.arg.dung.semantics.Extension;
+import org.tweetyproject.arg.dung.syntax.DungTheory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+import javax.swing.*;
+import javax.swing.Timer;
+import java.util.*;
 
 import static org.example.environment.TrafficLight.LightColor.GREEN;
 
-/*
-ALL simulations implementations, car, obstacles etc
-Will be updated for the next part with better interface and more complexes scenarios
- */
 public class Main {
-    private static List<Vehicle> allVehiclesEverCreated = new ArrayList<>();
-
     public static void main(String[] args) {
         System.out.println("Démarrage de la simulation...");
 
+        // Lancer un des scénarios ici :
+         //runScenario1();
+        //runScenario2();
+        // runScenario3();
+        runScenario4();
+    }
+
+    /**
+     * Scénario 1 : Une route simple à deux voies, un feu, quelques véhicules
+     */
+    public static void runScenario1() {
+        System.out.println("\n=== SCÉNARIO 1 : Route simple à deux voies + feu ===");
+
         Environment env = new Environment();
-        System.out.println("Environnement créé");
-
-        List<Position> entryPoints = List.of(new Position(0, 0), new Position(100, 0));
-        Road road = new Road("R1", 100.0, entryPoints);
-        road.setCondition(Road.RoadCondition.WET);
-
-        Lane lane = new Lane("L1", 3.5, 1.0, Lane.DIRECTION_RIGHT, road);
+        Road road = new Road("R1", 100.0, List.of(new Position(0, 0)));
+        Lane lane1 = new Lane("L1", 3.5, 1.0, Lane.DIRECTION_RIGHT, road);
         Lane lane2 = new Lane("L2", 3.5, -1.0, Lane.DIRECTION_RIGHT, road);
-        road.addLane(lane);
+        road.addLane(lane1);
         road.addLane(lane2);
 
-        TrafficLight trafficLight = new TrafficLight("R1", GREEN);
-        road.addTrafficLight(trafficLight, new Position(100, 0));
-
-        road.trainTrafficLights();              // 🔁 Calcule la politique MDP
+        TrafficLight light = new TrafficLight("R1", GREEN);
+        road.addTrafficLight(light, new Position(80, 1));
+        road.trainTrafficLights();
         road.enableMDP(true);
         road.setMDPDecisionInterval(3);
 
-        Obstacle barriere = new Obstacle(new Position(30, 1));
-        Obstacle debris = new Obstacle(new Position(95, 1));
-        Obstacle petion = new Obstacle(new Position(20, 1));
-        Obstacle ralentisseur = new Obstacle(new Position(85, 1));
-        Obstacle ralentisseur2 = new Obstacle(new Position(10, 1));
+        List<Vehicle> vehicles = new ArrayList<>();
+        Vehicle v1 = new Vehicle(new Position(0, 1), new Position(100, 1), env);
+        Vehicle v2 = new Vehicle(new Position(10, 1), new Position(100, 1), env);
+        lane1.addVehicle(v1);
+        lane1.addVehicle(v2);
+        vehicles.addAll(List.of(v1, v2));
 
-        Position destination = new Position(100, 1);
-        Position destination2 = new Position(25, 1);
-        Vehicle vehicle1 = new Vehicle(new Position(0, 1), destination);
-        Vehicle vehicle2 = new Vehicle(new Position(15, 1), destination2);
-        Vehicle vehicle3 = new Vehicle(new Position(81, -1), destination);
-        Vehicle vehicle4 = new Vehicle(new Position(92, -1), destination);
-        Vehicle vehicle5 = new Vehicle(new Position(0, 1), destination);
-        Vehicle vehicle6 = new Vehicle(new Position(15, 1), destination2);
-        Vehicle vehicle7 = new Vehicle(new Position(81, -1), destination);
-        Vehicle vehicle8 = new Vehicle(new Position(92, -1), destination);
-        Vehicle vehicle9 = new Vehicle(new Position(81, -1), destination);
-        Vehicle vehicle10 = new Vehicle(new Position(92, -1), destination);
+        env.getRoads().add(road);
+        env.buildGlobalGraph();
 
-        allVehiclesEverCreated.addAll(List.of(
-                vehicle1, vehicle2, vehicle3, vehicle4, vehicle5,
-                vehicle6, vehicle7, vehicle8, vehicle9, vehicle10
-        ));
+        for (int i = 0; i < 30; i++) {
+            System.out.printf("\n⏱️ Étape %02d\n", i + 1);
 
-        lane.addVehicle(vehicle1);
-        lane.addVehicle(vehicle2);
-        lane.addVehicle(vehicle3);
-        lane.addVehicle(vehicle4);
-        lane.addVehicle(vehicle5);
-        lane2.addVehicle(vehicle6);
-        lane2.addVehicle(vehicle7);
+            road.updateTrafficConditions();
+            road.updateTrafficLights();
 
-        lane.addObstacle(barriere);
-        lane2.addObstacle(debris);
-        lane.addObstacle(petion);
-        lane2.addObstacle(ralentisseur);
-        lane.addObstacle(ralentisseur2);
+            System.out.printf("🔦 Feu (%s) → Action: %s\n",
+                    light.getCurrentState(),
+                    light.getPolicy().getOrDefault(light.getCurrentState(), "AUCUNE"));
 
-        System.out.println(road);
-        System.out.println("Congested? " + road.isCongested());
+            for (Vehicle v : new ArrayList<>(lane1.getVehicles())) {
+                v.bdiCycle(lane1, road);
+            }
+            lane1.removeArrivedVehicles();
+            displayLaneVehicles(lane1);
 
-        // 🔁 Simulation prolongée : 40 étapes
-        for (int i = 0; i < 40; i++) {
-            System.out.println("=== Étape " + (i + 1) + " ===");
-
-            road.updateTrafficConditions();     // met à jour trafic + politique
-            road.updateTrafficLights();         // applique les décisions MDP
-
-            // 🔎 LOG : décision du feu
-            String state = trafficLight.getCurrentState();
-            String action = trafficLight.getPolicy().getOrDefault(state, "AUCUNE");
-            System.out.println("🟢 Feu (" + state + ") → Action: " + action);
-            System.out.println("🎨 Couleur actuelle du feu: " + trafficLight.getState());
-
-            // 💥 À mi-parcours, injecter plus de trafic
-            if (i == 20) {
-                System.out.println("⚠️ Phase 2 : On injecte du trafic !");
-                for (int j = 0; j < 10; j++) {
-                    Vehicle v = new Vehicle(new Position(5 + j * 2, 1), destination);
-                    lane.addVehicle(v);
-                    allVehiclesEverCreated.add(v);
+            if (i == 15) {
+                System.out.println("⚠️ [Phase 2] Injection de trafic !");
+                for (int j = 0; j < 3; j++) {
+                    Vehicle extra = new Vehicle(new Position(5 + j * 5, 1), new Position(100, 1), env);
+                    lane1.addVehicle(extra);
+                    vehicles.add(extra);
                 }
             }
 
-            // 🔄 Mise à jour des véhicules
-            for (Vehicle v : new ArrayList<>(lane.getVehicles())) {
-                v.bdiCycle(lane, road);
-            }
-            for (Vehicle v : new ArrayList<>(lane2.getVehicles())) {
-                v.bdiCycle(lane2, road);
-            }
-
-            lane.removeArrivedVehicles();
-            lane2.removeArrivedVehicles();
-
-            displayLaneVehicles(lane, "L1");
-            displayLaneVehicles(lane2, "L2");
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            sleep(500);
         }
 
-        // 📊 Affichage des métriques de performance
-        displayMetrics(allVehiclesEverCreated);
+        displayMetrics(vehicles);
     }
 
-    private static void printVehicleStatus(Vehicle vehicle, String name, Lane lane) {
-        System.out.println(name + " (Lane " + lane.getId() + "):");
-        System.out.println("  Position: " + vehicle.getPosition());
-        System.out.println("  Dernière intention: " +
-                (vehicle.getAllIntentions().isEmpty() ? "Aucune" :
-                        vehicle.getAllIntentions().get(vehicle.getAllIntentions().size() - 1)));
-        System.out.println("  Croyances: " + vehicle.getBeliefs());
-        System.out.println("  Désirs actifs: " +
-                vehicle.getDesires().stream()
-                        .filter(d -> !d.isAchieved())
-                        .map(Desire::getName)
-                        .collect(Collectors.toList()));
-        System.out.println("------------------");
+    /**
+     * Scénario 2 : Deux routes perpendiculaires avec feux de croisement
+     */
+    public static void runScenario2() {
+        System.out.println("\n=== SCÉNARIO 2 : Intersections & feux croisés ===");
+
+        Environment env = new Environment();
+
+        // Route horizontale
+        Road horizontal = new Road("H1", 100.0, List.of(new Position(0, 0)));
+        Lane hLane1 = new Lane("HL1", 3.5, 1.0, Lane.DIRECTION_RIGHT, horizontal);
+        Lane hLane2 = new Lane("HL2", 3.5, -1.0, Lane.DIRECTION_RIGHT, horizontal);
+        horizontal.addLane(hLane1);
+        horizontal.addLane(hLane2);
+
+        // Route verticale
+        Road vertical = new Road("V1", 100.0, List.of(new Position(50, -50)));
+        Lane vLane1 = new Lane("VL1", 3.5, 51.0, Lane.DIRECTION_RIGHT, vertical);
+        Lane vLane2 = new Lane("VL2", 3.5, 49.0, Lane.DIRECTION_RIGHT, vertical);
+        vertical.addLane(vLane1);
+        vertical.addLane(vLane2);
+
+        // Feu au croisement
+        TrafficLight crossLight = new TrafficLight("H1", GREEN);
+        TrafficLight crossLight2 = new TrafficLight("V1", GREEN);
+        horizontal.addTrafficLight(crossLight, new Position(50, 1));
+        vertical.addTrafficLight(crossLight2, new Position(50, 1));
+        horizontal.trainTrafficLights();
+        horizontal.enableMDP(true);
+
+        // Véhicules
+        List<Vehicle> vehicles = new ArrayList<>();
+        Vehicle vh1 = new Vehicle(new Position(0, 1), new Position(50, -50), env);
+        Vehicle vv1 = new Vehicle(new Position(50, 51), new Position(50, -50), env);
+        hLane1.addVehicle(vh1);
+        vLane1.addVehicle(vv1);
+        vehicles.addAll(List.of(vh1, vv1));
+
+        env.getRoads().add(horizontal);
+        env.getRoads().add(vertical);
+        env.buildGlobalGraph();
+
+        for (int i = 0; i < 30; i++) {
+            System.out.printf("\n⏱️ Étape %02d\n", i + 1);
+            horizontal.updateTrafficConditions();
+            horizontal.updateTrafficLights();
+
+            System.out.printf("🔦 Feu (%s) → Action: %s\n",
+                    crossLight.getCurrentState(),
+                    crossLight.getPolicy().getOrDefault(crossLight.getCurrentState(), "AUCUNE"));
+
+            for (Vehicle v : new ArrayList<>(hLane1.getVehicles())) {
+                v.bdiCycle(hLane1, horizontal);
+            }
+            for (Vehicle v : new ArrayList<>(vLane1.getVehicles())) {
+                v.bdiCycle(vLane1, vertical);
+            }
+
+            hLane1.removeArrivedVehicles();
+            vLane1.removeArrivedVehicles();
+
+            displayLaneVehicles(hLane1);
+            displayLaneVehicles(vLane1);
+
+            sleep(500);
+        }
+
+        displayMetrics(vehicles);
     }
 
-    private static void displayLaneVehicles(Lane lane, String laneId) {
+    /**
+     * Scénario 3 : Route complexe avec obstacles et embouteillages
+     */
+    public static void runScenario3() {
+        System.out.println("\n=== SCÉNARIO 3 : Obstacles & trafic dense ===");
+
+        Environment env = new Environment();
+        Road road = new Road("R1", 100.0, List.of(new Position(0, 0)));
+        Lane lane1 = new Lane("L1", 3.5, 1.0, Lane.DIRECTION_RIGHT, road);
+        Lane lane2 = new Lane("L2", 3.5, -1.0, Lane.DIRECTION_RIGHT, road);
+        road.addLane(lane1);
+        road.addLane(lane2);
+
+        TrafficLight trafficLight = new TrafficLight("R1", GREEN);
+        road.addTrafficLight(trafficLight, new Position(90, 1));
+        road.trainTrafficLights();
+        road.enableMDP(true);
+        road.setMDPDecisionInterval(3);
+
+        // Obstacles
+        lane1.addObstacle(new Obstacle(new Position(30, 1)));
+        lane1.addObstacle(new Obstacle(new Position(45, 1)));
+        lane2.addObstacle(new Obstacle(new Position(55, -1)));
+
+        List<Vehicle> vehicles = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Vehicle v = new Vehicle(new Position(i * 5, 1), new Position(100, 1), env);
+            lane1.addVehicle(v);
+            vehicles.add(v);
+        }
+
+        env.getRoads().add(road);
+        env.buildGlobalGraph();
+
+        for (int i = 0; i < 40; i++) {
+            System.out.printf("\n⏱️ Étape %02d\n", i + 1);
+            road.updateTrafficConditions();
+            road.updateTrafficLights();
+
+            System.out.printf("🔦 Feu (%s) → Action: %s\n",
+                    trafficLight.getCurrentState(),
+                    trafficLight.getPolicy().getOrDefault(trafficLight.getCurrentState(), "AUCUNE"));
+
+            for (Vehicle v : new ArrayList<>(lane1.getVehicles())) {
+                v.bdiCycle(lane1, road);
+            }
+            lane1.removeArrivedVehicles();
+
+            displayLaneVehicles(lane1);
+
+            if (i == 20) {
+                System.out.println("⚠️ Injection de trafic additionnel !");
+                for (int j = 0; j < 5; j++) {
+                    Vehicle extra = new Vehicle(new Position(5 + j * 5, 1), new Position(100, 1), env);
+                    lane1.addVehicle(extra);
+                    vehicles.add(extra);
+                }
+            }
+
+            sleep(500);
+        }
+
+        displayMetrics(vehicles);
+    }
+
+    public static void runScenario4() {
+        System.out.println("\n=== SCÉNARIO 4 : Choix du mode de transport via argumentation ===");
+
+        // 🔄 Contexte aléatoire
+        Random rand = new Random();
+        double distance = 1 + rand.nextDouble() * 9; // 1 à 10 km
+        String[] weathers = {"Sunny", "Rainy", "Cloudy"};
+        String weather = weathers[rand.nextInt(weathers.length)];
+        boolean isHealthy = rand.nextBoolean();
+        boolean isRushHour = rand.nextBoolean();
+
+        System.out.printf("Contexte: Distance = %.1f km | Météo = %s | Santé = %s | Heure de pointe = %s\n",
+                distance, weather, isHealthy ? "OK" : "Faible", isRushHour ? "Oui" : "Non");
+
+        TransportationAgent agent = new TransportationAgent(distance, weather, isHealthy, isRushHour);
+        DungTheory theory = agent.getFramework();
+
+        SimpleGroundedReasoner reasoner = new SimpleGroundedReasoner();
+        Extension<DungTheory> accepted = reasoner.getModel(theory);
+
+        String decision = agent.decideTransportationMode();
+        System.out.println("\n🚦 Décision de l'agent: Utiliser le mode de transport → " + decision);
+
+        System.out.println("\n✅ Arguments acceptés:");
+        for (org.tweetyproject.arg.dung.syntax.Argument arg : accepted) {
+            System.out.println("- " + arg);
+        }
+        DungGraphPanel panel = new DungGraphPanel(theory, accepted);
+
+        SwingUtilities.invokeLater(() -> {
+            JFrame frame = new JFrame("Graphe d'argumentation");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.add(panel);
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+
+            // 📤 Export PNG (petit délai pour que le panel ait une taille)
+            Timer timer = new Timer(1000, e -> DungGraphPanel.GraphExporter.exportPanelAsPNG(panel, "graph_export.png"));
+            timer.setRepeats(false);
+            timer.start();
+        });
+
+        System.out.println("\n📊 Comparaison des sémantiques :");
+        Map<String, Extension> all = agent.compareSemantics();
+        all.forEach((name, ext) -> {
+            System.out.printf("- %s: %s\n", name, ext);
+        });
+
+
+    }
+
+    private static void displayLaneVehicles(Lane lane) {
         if (!lane.getVehicles().isEmpty()) {
-            System.out.println("\nLane " + laneId + ":");
+            System.out.println("\n🚗 État de la lane " + lane.getId() + ":");
             for (Vehicle vehicle : lane.getVehicles()) {
-                printVehicleStatus(vehicle, "Véhicule " + vehicle.getId(), lane);
+                System.out.printf("- V%d @%s → %s\n",
+                        vehicle.getId(),
+                        vehicle.getPosition(),
+                        vehicle.getAllIntentions().isEmpty() ? "(Aucune intention)" :
+                                vehicle.getAllIntentions().get(vehicle.getAllIntentions().size() - 1));
             }
         }
     }
 
-    private static void displayMetrics(List<Vehicle> allVehicles) {
+    private static void displayMetrics(List<Vehicle> vehicles) {
         System.out.println("\n=== Métriques de simulation ===");
-
         double totalTime = 0;
         int totalLaneChanges = 0;
         int totalFrustration = 0;
-        int arrivedVehicles = 0;
+        int arrived = 0;
 
-        for (Vehicle vehicle : allVehicles) {
-            totalTime += vehicle.getTravelTimeSeconds();
-            totalLaneChanges += vehicle.getLaneChangeCount();
-            totalFrustration += vehicle.getFrustrationCount();
-
-            if (vehicle.getBeliefs().contains("AtDestination", true)) {
-                arrivedVehicles++;
-            }
+        for (Vehicle v : vehicles) {
+            totalTime += v.getTravelTimeSeconds();
+            totalLaneChanges += v.getLaneChangeCount();
+            totalFrustration += v.getFrustrationCount();
+            if (v.getBeliefs().contains("AtDestination", true)) arrived++;
         }
 
-        double avgTime = allVehicles.isEmpty() ? 0 : totalTime / allVehicles.size();
-        double avgLaneChanges = allVehicles.isEmpty() ? 0 : (double) totalLaneChanges / allVehicles.size();
-        double avgFrustration = allVehicles.isEmpty() ? 0 : (double) totalFrustration / allVehicles.size();
+        int total = vehicles.size();
+        System.out.printf("Temps moyen de trajet : %.2fs\n", total == 0 ? 0 : totalTime / total);
+        System.out.printf("Changements de voie moyen : %.2f\n", total == 0 ? 0 : (double) totalLaneChanges / total);
+        System.out.printf("Frustration moyenne : %.2f\n", total == 0 ? 0 : (double) totalFrustration / total);
+        System.out.printf("Véhicules arrivés : %d/%d\n", arrived, total);
+    }
 
-        System.out.println("\nRésultats globaux:");
-        System.out.printf("- Temps moyen de trajet: %.2f secondes%n", avgTime);
-        System.out.printf("- Nombre moyen de changements de voie: %.2f%n", avgLaneChanges);
-        System.out.printf("- Niveau moyen de frustration: %.2f%n", avgFrustration);
-        System.out.printf("- Véhicules arrivés à destination: %d/%d%n", arrivedVehicles, allVehicles.size());
-
-        System.out.println("\nDétails par véhicule:");
-        for (Vehicle vehicle : allVehicles) {
-            System.out.printf("Véhicule %d - Temps: %.1fs, Changements: %d, Frustration: %d, Arrivé: %s%n",
-                    vehicle.getId(),
-                    vehicle.getTravelTimeSeconds(),
-                    vehicle.getLaneChangeCount(),
-                    vehicle.getFrustrationCount(),
-                    vehicle.getBeliefs().contains("AtDestination", true) ? "Oui" : "Non");
-        }
+    private static void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException ignored) {}
     }
 }

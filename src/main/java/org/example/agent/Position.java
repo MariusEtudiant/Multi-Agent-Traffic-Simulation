@@ -18,6 +18,12 @@ public class Position {
         int dy = y - other.y;
         return Math.sqrt(dx*dx + dy*dy);
     }
+    public Position snapToGrid(int gridSize) {
+        int snappedX = Math.round((float) x / gridSize) * gridSize;
+        int snappedY = Math.round((float) y / gridSize) * gridSize;
+        return new Position(snappedX, snappedY);
+    }
+
 
     // get
     public int getX() { return x; }

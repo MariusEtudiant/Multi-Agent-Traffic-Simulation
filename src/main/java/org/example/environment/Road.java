@@ -2,6 +2,9 @@ package org.example.environment;
 
 import org.example.agent.Vehicle;
 import org.example.agent.Position;
+import org.example.planning.Graph;
+import org.example.planning.GraphNode;
+
 import java.util.ArrayList;
 import java.util.List;
 /**
@@ -14,10 +17,11 @@ public class Road {
     private static final int maxCapacity = 40;
     private final List<Position> entryPoints;  // entry points/end (intersections etc)
     private final List<TrafficLight> trafficLights;
+    private List<Position> trafficLightPositions = new ArrayList<>();
     private final List<Lane> lanes;
     private boolean isCongested;
     private RoadCondition condition = RoadCondition.DRY;
-
+    private Graph graph;
 
     // MDP control parameters
     private boolean useMDP = true;
@@ -58,6 +62,7 @@ public class Road {
     public static int maxCapacityCount(){return maxCapacity;}
     public void addTrafficLight(TrafficLight trafficLight, Position position){
         trafficLights.add(trafficLight);
+        trafficLightPositions.add(position);
     }
 
     public boolean hasLeftLane(Lane currentLane) {
@@ -154,11 +159,18 @@ public class Road {
                 .count();
     }
 
-    private Position getLightPosition(String lightId) {
+    public Position getLightPosition(String lightId) {
         // Méthode simplifiée - à adapter selon votre implémentation réelle
         // Par défaut, retourne la position de fin de route
         return entryPoints.get(entryPoints.size() - 1);
     }
+    public Graph getGraph() {
+        return graph;
+    }
+    public List<Position> getEntryPoints() {
+        return entryPoints;
+    }
+
 
     public void updateTrafficLights() {
         // 1. Mettre à jour les niveaux de trafic pour chaque feu
@@ -189,4 +201,69 @@ public class Road {
             light.updatePolicy(); // Recalculer la politique
         }
     }
+
+    public void initGraphForPathfinding() {
+        this.graph = new Graph();
+        int segmentLength = 10; // Résolution du graphe (tous les 10 mètres)
+
+        // Création des nœuds pour toutes les voies à chaque segment
+        for (int x = 0; x <= this.length; x += segmentLength) {
+            for (Lane lane : lanes) {
+                // Crée un nœud pour chaque position (x, y) où y est le centre de la voie
+                graph.getOrCreateNode(new Position(x, lane.getCenterYInt()));
+            }
+        }
+
+        // Connexions horizontales (avancer dans la même voie)
+        for (int x = 0; x <= this.length - segmentLength; x += segmentLength) {
+            for (Lane lane : lanes) {
+                int y = lane.getCenterYInt();
+                graph.connect(new Position(x, y), new Position(x + segmentLength, y), segmentLength);
+            }
+        }
+
+        // Connexions verticales (changement de voie)
+        for (int x = 0; x <= this.length; x += segmentLength) {
+            for (int i = 0; i < lanes.size() - 1; i++) {
+                int y1 = lanes.get(i).getCenterYInt();
+                int y2 = lanes.get(i + 1).getCenterYInt();
+
+                // Coût de changement de voie (peut être ajusté)
+                double laneChangeCost = 5.0;
+
+                // Connexion bidirectionnelle entre voies adjacentes
+                graph.connect(new Position(x, y1), new Position(x, y2), laneChangeCost);
+                graph.connect(new Position(x, y2), new Position(x, y1), laneChangeCost);
+            }
+        }
+
+        // Intégration des obstacles
+        for (Lane lane : lanes) {
+            for (Obstacle obstacle : lane.getObstacles()) {
+                Position obsPos = obstacle.getPosition();
+                GraphNode obsNode = graph.getNode(obsPos.snapToGrid(segmentLength));
+                if (obsNode != null) {
+                    // Supprimer ou isoler le nœud concerné
+                    for (GraphNode neighbor : new ArrayList<>(obsNode.getNeighbors().keySet())) {
+                        neighbor.getNeighbors().remove(obsNode);
+                    }
+                    obsNode.getNeighbors().clear(); // plus de sortie
+                }
+            }
+        }
+
+        System.out.println("📌 Graphe généré automatiquement avec " + graph.getAllNodes().size() + " nœuds.");
+    }
+    public List<Lane> getLanes() {
+        return new ArrayList<>(lanes); // Returns a copy for encapsulation
+    }
+    public Position getTrafficLightPosition(TrafficLight light) {
+        int index = trafficLights.indexOf(light);
+        if (index != -1 && index < trafficLightPositions.size()) {
+            return trafficLightPositions.get(index);
+        }
+        return null;
+    }
+
+
 }

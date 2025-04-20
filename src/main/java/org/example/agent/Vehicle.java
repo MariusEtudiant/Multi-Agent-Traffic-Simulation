@@ -30,6 +30,9 @@ import org.example.environment.Lane;
 import org.example.environment.Road;
 import org.example.environment.TrafficLight;
 import org.example.logic.*;
+import org.example.planning.DijkstraAlgorithm;
+import org.example.planning.Graph;
+import org.example.planning.GraphNode;
 
 import java.util.*;
 
@@ -50,13 +53,28 @@ public class Vehicle {
     private static int nextId = 1;
     private final int id;
 
+    //plan
+    private List<Position> path = new ArrayList<>();
+    private Position lastPlannedPosition = null;
+    private Environment environment;
+    private boolean useGlobalGraph = true; // par défaut on active
+    private int nextWaypointIdx = 0;
+    private long lastPlanTime = 0;
+    private static final long PLAN_COOLDOWN_MS = 1000;
+    private long lastLaneChangeTime = 0;
+    private static final long LANE_CHANGE_COOLDOWN_MS = 1000; // 1 seconde
+
+
+
+
+
     //metrics
     private long startTime;
     private int laneChangeCount = 0;
     private int frustrationCount = 0;
     private Long endTime = null;
 
-    public Vehicle(Position position, Position destination) {
+    public Vehicle(Position position, Position destination, Environment environment) {
         this.id = nextId++;
         this.beliefs = new BeliefInitial();
         this.desires = new ArrayList<>();
@@ -64,23 +82,19 @@ public class Vehicle {
         this.intentions = new LinkedList<>();
         this.position = position;
         this.destination = destination;
+        this.environment = environment;
         this.preciseX = position.getX();
         this.startTime = System.currentTimeMillis();
         initializeGoals();
-    }
-
-    public void addDesire(Desire desire) {
-        desires.add(desire);
-    }
-    public void addIntention(Intention intention) {
-        intentions.add(intention);
     }
 
     public double getTravelTimeSeconds() {
         long end = endTime != null ? endTime : System.currentTimeMillis();
         return (end - startTime) / 1000.0;
     }
-
+    public void setUseGlobalGraph(boolean useGlobalGraph) {
+        this.useGlobalGraph = useGlobalGraph;
+    }
     public int getLaneChangeCount() {
         return laneChangeCount;
     }
@@ -134,8 +148,6 @@ public class Vehicle {
         beliefs.addBelief(new Belief("HighSpeed",
                 position.distanceTo(destination) > 10 &&
                         lane.getVehicleSpeed(this) > 30.0));
-
-        beliefs.addBelief(new Belief("HighSpeed", lane.getVehicleSpeed(this) > 50.0));
         beliefs.addBelief(new Belief("CollisionRisk",
                 beliefs.contains("CarAhead", true) && beliefs.contains("HighSpeed", true)));
 
@@ -180,9 +192,78 @@ public class Vehicle {
     }
 
     private void plan() {
-        //planif project.
-        //attention Queue only use
+        if (beliefs.contains("AtDestination", true)) {
+            System.out.println("✅ Véhicule " + this.id + " : déjà à destination.");
+            return;
+        }
+
+        Graph roadGraph;
+        if (useGlobalGraph && environment != null) {
+            roadGraph = environment.getGlobalGraph();
+            System.out.println("🌐 Véhicule " + this.id + " : utilisation du graphe GLOBAL");
+        } else {
+            roadGraph = road.getGraph();
+            System.out.println("🛣️ Véhicule " + this.id + " : utilisation du graphe LOCAL");
+        }
+        if (roadGraph == null) {
+            System.out.println("❌ Aucun graphe de route n’est disponible.");
+            return;
+        }
+
+        // ⚠️ Snap X uniquement, mais garder Y = destination.getY()
+        int gridSize = 10;
+        int snappedStartX = Math.round((float) position.getX() / gridSize) * gridSize;
+        int startY       = currentLane.getCenterYInt();
+        Position snappedStart = new Position(snappedStartX, startY);
+
+        int snappedGoalX = Math.round((float) destination.getX() / gridSize) * gridSize;
+        // On remplace startY par la Y réelle de la destination
+        Position snappedGoal  = new Position(snappedGoalX, destination.getY());
+
+        GraphNode startNode = roadGraph.getNode(snappedStart);
+        GraphNode goalNode  = roadGraph.getNode(snappedGoal);
+
+        if (startNode == null || goalNode == null) {
+            System.out.println("❌ Position de départ ou d'arrivée non trouvée dans le graphe !");
+            System.out.println("   Start: " + snappedStart + " → " + startNode);
+            System.out.println("   Goal : " + snappedGoal  + " → " + goalNode);
+            return;
+        }
+
+        this.path = DijkstraAlgorithm.computePath(roadGraph, snappedStart, snappedGoal);
+
+        if (path.isEmpty()) {
+            System.out.println("⚠️ Aucune route trouvée pour le véhicule " + this.id);
+        } else {
+            System.out.println("🚗 Véhicule " + this.id + " → Chemin calculé : " + path);
+        }
+        this.nextWaypointIdx = 0;
+        this.lastPlannedPosition = this.position;
     }
+
+
+    public void planIfNeeded() {
+        if (beliefs.contains("AtDestination", true)) return;
+
+        boolean obstacleAhead = beliefs.contains("ObstacleAhead", true);
+        boolean trafficJam = beliefs.contains("InTrafficJam", true);
+        boolean hasMovedFar = lastPlannedPosition != null &&
+                lastPlannedPosition.distanceTo(position) > 9.0;
+        boolean shouldPlan = obstacleAhead || trafficJam || path.isEmpty() || hasMovedFar;
+
+        long now = System.currentTimeMillis();
+        boolean cooldownPassed = (now - lastPlanTime > PLAN_COOLDOWN_MS);
+
+        if (shouldPlan && cooldownPassed) {
+            System.out.println("📍 [V" + id + "] Recalcul du chemin déclenché");
+            plan();
+            lastPlannedPosition = position;
+            lastPlanTime = now;
+        }
+    }
+
+
+
 
     private void generateIntentions(Desire desire) {
         intentions.clear();
@@ -202,10 +283,18 @@ public class Vehicle {
         double distanceToLight = getDistanceToNextLight(); //distance of the nextLight
         boolean isRedLightNear = beliefs.contains("FeuRouge", true) &&
                 distanceToLight < SAFE_BRAKING_DISTANCE;
+        boolean isOrangeLightNear = beliefs.contains("FeuOrange", true) &&
+                distanceToLight < SAFE_BRAKING_DISTANCE / 1.5;
 
-        if (isRedLightNear) {
-            intentions.add(Intention.STOP);
+
+        if (isRedLightNear || isOrangeLightNear) {
+            intentions.add(Intention.SLOW_DOWN); // ou STOP si encore plus proche
             return;
+        }
+        if (distanceToLight < 5) {
+            intentions.add(Intention.STOP);
+        } else if (distanceToLight < 15) {
+            intentions.add(Intention.SLOW_DOWN);
         }
 
         switch (desire.getName()) {
@@ -305,6 +394,57 @@ public class Vehicle {
                 break;
         }
 
+        // =================== ⬇️ FOLLOW THE PLAN if no higher priority triggered
+        if (!path.isEmpty() && nextWaypointIdx < path.size()) {
+            Position target = path.get(nextWaypointIdx);
+
+            if (position.distanceTo(target) < 2.0) {
+                nextWaypointIdx++;
+                if (nextWaypointIdx >= path.size()) {
+                    System.out.println("🟢 Véhicule " + id + " a atteint la fin du chemin planifié");
+                    return;
+                }
+                target = path.get(nextWaypointIdx);
+            }
+
+            double dx = target.getX() - position.getX();
+            double dy = target.getY() - position.getY();
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 0) {
+                    intentions.add(Intention.ACCELERATE);
+                } else {
+                    intentions.add(Intention.SLOW_DOWN);
+                }
+            } else {
+                long now = System.currentTimeMillis();
+                boolean canChangeLane = (now - lastLaneChangeTime > LANE_CHANGE_COOLDOWN_MS);
+
+                // Si trop de différence de Y → probablement erreur de snapping → on ignore
+                if (Math.abs(dy) > 20) {
+                    System.out.println("⛔ Ignoré waypoint trop éloigné en Y : " + target);
+                    intentions.add(Intention.WAIT);
+                }
+                else if (dy > 0 && road.hasRightLane(currentLane) && canChangeLane) {
+                    intentions.add(Intention.TURN_RIGHT);
+                    lastLaneChangeTime = now;
+                }
+                else if (dy < 0 && road.hasLeftLane(currentLane) && canChangeLane) {
+                    intentions.add(Intention.TURN_LEFT);
+                    lastLaneChangeTime = now;
+                }
+                else {
+                    intentions.add(Intention.WAIT);
+                }
+            }
+
+
+
+            System.out.println("🧭 Véhicule " + id + " suit plan vers " + target);
+            return;
+        }
+
+
         //default behavior
         if (intentions.isEmpty()) {
             if (beliefs.contains("FeuRouge", true)) {
@@ -325,6 +465,7 @@ public class Vehicle {
             Intention intention = intentions.poll();
             executedIntentions.add(intention); // Garder trace
             executeIntention(intention);
+            System.out.println("🎯 Véhicule " + id + " intention exécutée: " + intention);
         }
     }
 
@@ -440,7 +581,7 @@ public class Vehicle {
         deliberate();
 
         // 4. Planification (simplifiée)
-        plan();
+        planIfNeeded();
 
         // 5. Exécution
         act();
@@ -451,15 +592,21 @@ public class Vehicle {
 
     // gets
     private double getDistanceToNextLight() {
-        // Trouver le feu le plus proche devant le véhicule
+        double minDistance = Double.MAX_VALUE;
+
         for (TrafficLight light : road.getTrafficLights()) {
-            double lightX = 100; // Position du feu (devrait être stockée dans TrafficLight)
-            if (lightX > position.getX()) { // Feu devant le véhicule
-                return lightX - position.getX();
+            Position lightPos = road.getTrafficLightPosition(light);
+
+            if (lightPos != null && lightPos.getX() > position.getX()) {
+                double distance = lightPos.getX() - position.getX();
+                minDistance = Math.min(minDistance, distance);
             }
         }
-        return Double.MAX_VALUE; // Aucun feu devant
+
+        return minDistance;
     }
+
+
 
     public Position getPosition() {
         return position;

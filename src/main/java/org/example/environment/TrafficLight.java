@@ -1,5 +1,7 @@
 package org.example.environment;
 
+import org.example.agent.Position;
+
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -9,6 +11,7 @@ import static org.example.environment.TrafficLight.LightColor.GREEN;
 a trafficLight with an id, state, interval
  */
 public class TrafficLight {
+
 
     public enum TrafficLevel {NONE, MEDIUM, HEAVY}
     public enum LightColor { GREEN, ORANGE, RED}
@@ -29,6 +32,8 @@ public class TrafficLight {
     private double epsilon = 0.1; // Exploration rate
 
     private final TransitionMatrix transitionMatrix = new TransitionMatrix();
+    private Position position;
+
 
 
     public TrafficLight(String id, LightColor state) {

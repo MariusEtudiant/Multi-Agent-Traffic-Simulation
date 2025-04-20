@@ -51,6 +51,9 @@ public class Lane {
     public void addObstacle(Obstacle obstacle) {
         obstacles.add(obstacle);
     }
+    public List<Obstacle> getObstacles() {
+        return obstacles;
+    }
 
     public boolean isCarAhead(Vehicle vehicle) {
         Position currentPos = vehicle.getPosition();
