@@ -37,6 +37,13 @@ import org.example.planning.GraphNode;
 import java.util.*;
 
 public class Vehicle {
+    //transport mode
+    public enum TransportationMode {
+        CAR, BIKE, PUBLIC_TRANSPORT, WALK
+    }
+    private TransportationMode mode = TransportationMode.CAR; // défaut
+    private double speedFactor = 1.0;
+
     //bdi
     private BeliefInitial beliefs;
     private List<Desire> desires;
@@ -87,6 +94,16 @@ public class Vehicle {
         this.startTime = System.currentTimeMillis();
         initializeGoals();
     }
+    public void setMode(TransportationMode mode) {
+        this.mode = mode;
+        switch (mode) {
+            case CAR -> speedFactor = 1.0;
+            case BIKE -> speedFactor = 0.6;
+            case PUBLIC_TRANSPORT -> speedFactor = 0.8;
+            case WALK -> speedFactor = 0.2;
+        }
+    }
+
 
     public double getTravelTimeSeconds() {
         long end = endTime != null ? endTime : System.currentTimeMillis();
@@ -507,16 +524,16 @@ public class Vehicle {
         switch (intention) {
             case ACCELERATE:
                 if (!isRedLightNear) {
-                    preciseX += 1.0 * directionFactor;
+                    preciseX += 1.0 * speedFactor * directionFactor;
                     position = new Position((int) Math.round(preciseX), position.getY());
-                    System.out.println("Accélération vers " + position);
+                    System.out.println("[" + mode + "] Accélération vers " + position);
                 }
                 break;
 
             case SLOW_DOWN:
-                preciseX += 0.5 * directionFactor;
+                preciseX += 0.5 * speedFactor * directionFactor;
                 position = new Position((int) Math.round(preciseX), position.getY());
-                System.out.println("Ralentissement vers " + position);
+                System.out.println("[" + mode + "] Ralentissement vers " + position);
                 break;
 
             case TURN_LEFT:
@@ -627,6 +644,10 @@ public class Vehicle {
     public int getId() {
         return this.id;
     }
+    public TransportationMode getMode() {
+        return mode;
+    }
+
 
     //no use but maybe later:
 

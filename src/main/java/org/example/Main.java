@@ -24,7 +24,7 @@ public class Main {
         System.out.println("Démarrage de la simulation...");
 
         // Lancer un des scénarios ici :
-         //runScenario1();
+        //runScenario1();
         //runScenario2();
         // runScenario3();
         runScenario4();
@@ -226,55 +226,66 @@ public class Main {
     }
 
     public static void runScenario4() {
-        System.out.println("\n=== SCÉNARIO 4 : Choix du mode de transport via argumentation ===");
+        System.out.println("\n=== SCÉNARIO 4 : Choix du mode de transport via argumentation ===");
 
-        // 🔄 Contexte aléatoire
+        /* --------- 1. Contexte aléatoire --------- */
         Random rand = new Random();
-        double distance = 1 + rand.nextDouble() * 9; // 1 à 10 km
+        int startX = rand.nextInt(20);           // 0 – 19
+        int destX = 50 + rand.nextInt(60);      // 50 – 109
+        Position startPos = new Position(startX, 0);
+        Position destPos = new Position(destX, 0);
+        double dist = startPos.distanceTo(destPos);
+
         String[] weathers = {"Sunny", "Rainy", "Cloudy"};
         String weather = weathers[rand.nextInt(weathers.length)];
         boolean isHealthy = rand.nextBoolean();
         boolean isRushHour = rand.nextBoolean();
 
-        System.out.printf("Contexte: Distance = %.1f km | Météo = %s | Santé = %s | Heure de pointe = %s\n",
-                distance, weather, isHealthy ? "OK" : "Faible", isRushHour ? "Oui" : "Non");
+        System.out.printf(
+                "Contexte : Distance ≈ %.1f unités | Météo = %s | Santé = %s | Heure de pointe = %s%n",
+                dist, weather, isHealthy ? "OK" : "Faible", isRushHour ? "Oui" : "Non"
+        );
 
-        TransportationAgent agent = new TransportationAgent(distance, weather, isHealthy, isRushHour);
-        DungTheory theory = agent.getFramework();
+        /* --------- 2. Construction de l’agent --------- */
+        TransportationAgent agent =
+                new TransportationAgent(startPos, destPos, weather, isHealthy, isRushHour);
 
-        SimpleGroundedReasoner reasoner = new SimpleGroundedReasoner();
-        Extension<DungTheory> accepted = reasoner.getModel(theory);
-
+        /* --------- 3. Décision et probabilités --------- */
         String decision = agent.decideTransportationMode();
-        System.out.println("\n🚦 Décision de l'agent: Utiliser le mode de transport → " + decision);
+        Map<String, Double> probs = agent.getModeProbabilities();
 
-        System.out.println("\n✅ Arguments acceptés:");
-        for (org.tweetyproject.arg.dung.syntax.Argument arg : accepted) {
-            System.out.println("- " + arg);
-        }
+        System.out.println("\n📊 Distribution des probabilités :");
+        probs.forEach((m, p) -> System.out.printf("  • %-17s : %.2f %%%n", m, p));
+
+        System.out.println("\n🚦 Décision de l’agent → " + decision);
+
+        /* --------- 4. Arguments acceptés (Grounded) ----- */
+        DungTheory theory = agent.getFramework();                // wrapper public → buildFramework()
+        Extension accepted = new SimpleGroundedReasoner()
+                .getModel(theory);
+
+        System.out.println("\n✅ Arguments acceptés (Grounded) :");
+        accepted.forEach(a -> System.out.println("  - " + a.toString()));
+
+        /* --------- 5. Affichage + export du graphe ------- */
         DungGraphPanel panel = new DungGraphPanel(theory, accepted);
 
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Graphe d'argumentation");
+            JFrame frame = new JFrame("Graphe d’argumentation");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.add(panel);
             frame.pack();
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
 
-            // 📤 Export PNG (petit délai pour que le panel ait une taille)
-            Timer timer = new Timer(1000, e -> DungGraphPanel.GraphExporter.exportPanelAsPNG(panel, "graph_export.png"));
-            timer.setRepeats(false);
-            timer.start();
+            DungGraphPanel.GraphExporter.exportPanelAsPNG(panel, "graph_export.png");
         });
 
-        System.out.println("\n📊 Comparaison des sémantiques :");
-        Map<String, Extension> all = agent.compareSemantics();
-        all.forEach((name, ext) -> {
-            System.out.printf("- %s: %s\n", name, ext);
-        });
-
-
+        /* --------- 6. Comparaison rapide des sémantiques - */
+        System.out.println("\n🔍 Comparaison des sémantiques :");
+        agent.compareSemantics().forEach(
+                (name, ext) -> System.out.printf("  - %-9s : %s%n", name, ext)
+        );
     }
 
     private static void displayLaneVehicles(Lane lane) {
