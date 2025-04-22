@@ -241,6 +241,7 @@ public class Main {
         boolean isHealthy = rand.nextBoolean();
         boolean isRushHour = rand.nextBoolean();
 
+
         System.out.printf(
                 "Contexte : Distance ≈ %.1f unités | Météo = %s | Santé = %s | Heure de pointe = %s%n",
                 dist, weather, isHealthy ? "OK" : "Faible", isRushHour ? "Oui" : "Non"

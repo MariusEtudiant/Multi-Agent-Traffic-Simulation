@@ -57,6 +57,7 @@ public class TransportationAgent {
                 // CAR
                 Map.entry("A13","CAR"), Map.entry("A16","CAR"),
                 Map.entry("A17","CAR"), Map.entry("A18","CAR"),
+                Map.entry("A28","CAR"), Map.entry("A29","CAR"), Map.entry("A30","CAR"),
                 // PT
                 Map.entry("A3", "PUBLIC_TRANSPORT"), Map.entry("A10","PUBLIC_TRANSPORT"),
                 Map.entry("A22","PUBLIC_TRANSPORT"), Map.entry("A25","PUBLIC_TRANSPORT"),
@@ -115,6 +116,13 @@ public class TransportationAgent {
             }
 
         }
+        // Ajout d'un prior statistique sur la popularité réelle
+        Map<String, Double> prior = Map.of(
+                "CAR", 0.5,
+                "PUBLIC_TRANSPORT", 0.2,
+                "WALK", 0.15,
+                "BIKE", 0.15
+        );
 
         /* ----- Moyenne et soft‑max pour obtenir des % ------- */
         double min = Collections.min(cumulative.values());
@@ -122,8 +130,9 @@ public class TransportationAgent {
         Map<String, Double> exp = new HashMap<>();
         double sumExp = 0.0;
         for (String mode : MODES) {
-            double val = (cumulative.get(mode) - min) / reasoners.size(); // normalise [-1,1] → [0,2]
-            double e   = Math.exp(val / SOFTMAX_TEMPERATURE);
+            double baseScore = (cumulative.get(mode) - min) / reasoners.size();
+            double val = baseScore + prior.getOrDefault(mode, 0.0);
+            double e = Math.exp(val / SOFTMAX_TEMPERATURE);
             exp.put(mode, e);
             sumExp += e;
         }
@@ -148,6 +157,9 @@ public class TransportationAgent {
             th.add(a);
             return a;
         });
+        th.addAttack(arg.apply("A28"), arg.apply("A1"));  // Always available vs cost
+        th.addAttack(arg.apply("A29"), arg.apply("A3"));  // Autonomy vs PT
+        th.addAttack(arg.apply("A30"), arg.apply("A5"));  // Family friendly vs walking
 
         /* === Arguments & attaques ======================== */
         // -------- CAR --------
