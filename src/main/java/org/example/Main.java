@@ -28,6 +28,7 @@ public class Main {
         //runScenario2();
         // runScenario3();
         runScenario4();
+        runBatchSimulation();
     }
 
     /**
@@ -253,19 +254,21 @@ public class Main {
 
         /* --------- 3. Décision et probabilités --------- */
         String decision = agent.decideTransportationMode();
-        Map<String, Double> probs = agent.getModeProbabilities();
+        //Map<String, Double> probs = agent.getModeProbabilities();
+        Map<String, Double> scrResults = agent.getModeScoresScr();
 
-        System.out.println("\n📊 Distribution des probabilités :");
-        probs.forEach((m, p) -> System.out.printf("  • %-17s : %.2f %%%n", m, p));
+        System.out.println("\nDistribution des probabilités :");
+        //probs.forEach((m, p) -> System.out.printf("  • %-17s : %.2f %%%n", m, p));
+        scrResults.forEach((m, v) -> System.out.printf("  • %-17s : %.2f %%\n", m, v));
 
-        System.out.println("\n🚦 Décision de l’agent → " + decision);
+        System.out.println("\n Décision de l’agent → " + decision);
 
         /* --------- 4. Arguments acceptés (Grounded) ----- */
-        DungTheory theory = agent.getFramework();                // wrapper public → buildFramework()
+        DungTheory theory = agent.buildFramework();                // wrapper public → buildFramework()
         Extension accepted = new SimpleGroundedReasoner()
                 .getModel(theory);
 
-        System.out.println("\n✅ Arguments acceptés (Grounded) :");
+        System.out.println("\n Arguments acceptés (Grounded) :");
         accepted.forEach(a -> System.out.println("  - " + a.toString()));
 
         /* --------- 5. Affichage + export du graphe ------- */
@@ -288,6 +291,41 @@ public class Main {
                 (name, ext) -> System.out.printf("  - %-9s : %s%n", name, ext)
         );
     }
+
+    public static void runBatchSimulation() {
+        System.out.println("\n=== SIMULATION MASSIVE (100 décisions - SCR based) ===");
+
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (String mode : List.of("CAR", "PUBLIC_TRANSPORT", "WALK", "BIKE"))
+            counts.put(mode, 0);
+
+        Random rand = new Random();
+
+        for (int i = 0; i < 100; i++) {
+            int startX = rand.nextInt(20);
+            int destX = 50 + rand.nextInt(60);
+            Position startPos = new Position(startX, 0);
+            Position destPos = new Position(destX, 0);
+
+            String[] weathers = {"Sunny", "Rainy", "Cloudy"};
+            String weather = weathers[rand.nextInt(weathers.length)];
+            boolean isHealthy = rand.nextBoolean();
+            boolean isRush = rand.nextBoolean();
+
+            TransportationAgent agent = new TransportationAgent(startPos, destPos, weather, isHealthy, isRush);
+            String decision = agent.decideTransportationMode();  // utilise getModeScoresScr()
+
+            counts.put(decision, counts.getOrDefault(decision, 0) + 1);
+        }
+
+        System.out.println("\n📊 Répartition après 100 décisions (SCR-based):");
+        counts.forEach((mode, count) -> {
+            double percent = (count / 100.0) * 100;
+            System.out.printf("• %-17s : %3d (%.1f%%)%n", mode, count, percent);
+        });
+    }
+
+
 
     private static void displayLaneVehicles(Lane lane) {
         if (!lane.getVehicles().isEmpty()) {
