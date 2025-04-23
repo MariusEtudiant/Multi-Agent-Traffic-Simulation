@@ -67,7 +67,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>org.example.gui.Main</mainClass>
+                    <mainClass>org.example.gui.TrafficSimulatorApp</mainClass>
                     <options>
                         <option>--add-opens</option>
                         <option>javafx.graphics/com.sun.glass.utils=ALL-UNNAMED</option>
