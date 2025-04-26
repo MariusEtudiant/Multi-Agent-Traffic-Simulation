@@ -1,3 +1,4 @@
+
 package org.example;
 
 import org.example.ArgumentationDM.DungGraphPanel;
@@ -348,9 +349,9 @@ public class Main {
         int arrived = 0;
 
         for (Vehicle v : vehicles) {
-            totalTime += v.getTravelTimeSeconds();
-            totalLaneChanges += v.getLaneChangeCount();
-            totalFrustration += v.getFrustrationCount();
+            //totalTime += v.getTravelTimeSeconds();
+            //totalLaneChanges += v.getLaneChangeCount();
+            //totalFrustration += v.getFrustrationCount();
             if (v.getBeliefs().contains("AtDestination", true)) arrived++;
         }
 
@@ -360,6 +361,9 @@ public class Main {
         System.out.printf("Frustration moyenne : %.2f\n", total == 0 ? 0 : (double) totalFrustration / total);
         System.out.printf("Véhicules arrivés : %d/%d\n", arrived, total);
     }
+
+
+
 
     private static void sleep(long ms) {
         try { Thread.sleep(ms); } catch (InterruptedException ignored) {}

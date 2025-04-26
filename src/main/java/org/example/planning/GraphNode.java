@@ -7,6 +7,7 @@ import java.util.*;
 public class GraphNode {
     private final Position position;
     private final Map<GraphNode, Double> neighbors = new HashMap<>();
+    private boolean hasObstacle = false;
 
     public GraphNode(Position position) {
         this.position = position;
@@ -22,6 +23,13 @@ public class GraphNode {
 
     public void addNeighbor(GraphNode neighbor, double cost) {
         neighbors.put(neighbor, cost);
+    }
+    public void setObstacle(boolean obstacle) {
+        this.hasObstacle = obstacle;
+    }
+
+    public boolean hasObstacle() {
+        return hasObstacle;
     }
 
     @Override

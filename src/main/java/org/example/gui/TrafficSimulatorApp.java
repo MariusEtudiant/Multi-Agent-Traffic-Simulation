@@ -66,6 +66,13 @@ public class TrafficSimulatorApp extends Application {
         root.setCenter(canvas);
         root.setTop(createControlPanel(root));
         canvas.setOnMouseClicked(event -> {
+            if (selectedVehicle != null) {
+                System.out.println("🛣️ Chemin complet de V" + selectedVehicle.getId() + " :");
+                for (Position pos : selectedVehicle.getPath()) {
+                    System.out.println("   ➔ " + pos);
+                }
+            }
+
             double clickedX = (event.getX() - 100) / 7.0;
 
             // Cherche un véhicule proche du clic
@@ -145,7 +152,7 @@ public class TrafficSimulatorApp extends Application {
         environment = new Environment();
         vehicles = new ArrayList<>();
 
-        road = new Road("R1", 100.0, List.of(new Position(0, 0)));
+        road = new Road("R1", 120.0, List.of(new Position(0, 0)));
 
         lane1 = new Lane("L1", 3.5, 1.0, Lane.DIRECTION_RIGHT, road);
         lane2 = new Lane("L2", 3.5, -1.0, Lane.DIRECTION_RIGHT, road);
@@ -159,16 +166,20 @@ public class TrafficSimulatorApp extends Application {
         road.setMDPDecisionInterval(5);
 
         Vehicle v1 = new Vehicle(new Position(15, 1), new Position(100, -1), environment);
-        Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment);
+        //Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment);
         lane1.addVehicle(v1);
-        lane1.addVehicle(v2);
+        //lane1.addVehicle(v2);
 
-        Vehicle v3 = new Vehicle(new Position(0, -1), new Position(100, 1), environment);
-        Vehicle v4 = new Vehicle(new Position(11, -1), new Position(100, 1), environment);
-        lane2.addVehicle(v3);
-        lane2.addVehicle(v4);
+        //Vehicle v3 = new Vehicle(new Position(0, -1), new Position(100, 1), environment);
+        //Vehicle v4 = new Vehicle(new Position(11, -1), new Position(100, 1), environment);
+        //lane2.addVehicle(v3);
+        //lane2.addVehicle(v4);
 
-        vehicles.addAll(List.of(v1, v2, v3, v4));
+        vehicles.addAll(List.of(v1));//, v2, v3, v4));
+        v1.setPathColor(Color.BLUE);
+        //v2.setPathColor(Color.GREEN);
+        //v3.setPathColor(Color.RED);
+        //v4.setPathColor(Color.PURPLE);
         // Ajouter les obstacles
         Obstacle obs1 = new Obstacle(new Position(50, 1));     // Sur la lane du haut
         Obstacle obs2 = new Obstacle(new Position(20, -1));    // Sur la lane du bas
@@ -181,6 +192,13 @@ public class TrafficSimulatorApp extends Application {
 
         environment.getRoads().add(road);
         environment.buildGlobalGraph();
+
+        for (Obstacle obs : lane1.getObstacles()) {
+            environment.getGlobalGraph().markObstacle(obs.getPosition());
+        }
+        for (Obstacle obs : lane2.getObstacles()) {
+            environment.getGlobalGraph().markObstacle(obs.getPosition());
+        }
 
         drawFrame();
     }
@@ -225,7 +243,9 @@ public class TrafficSimulatorApp extends Application {
 
         // 🧭 Chemins si activé
         if (showPaths) {
-            gc.setStroke(Color.ORANGE);
+            for (Vehicle v : vehicles) {
+                gc.setStroke(v.getPathColor());
+            }
             gc.setLineDashes(0);
             for (Vehicle v : vehicles) {
                 List<Position> path = v.getPath();

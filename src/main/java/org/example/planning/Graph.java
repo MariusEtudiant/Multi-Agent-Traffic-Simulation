@@ -17,6 +17,13 @@ public class Graph {
         nodeA.addNeighbor(nodeB, cost);
         nodeB.addNeighbor(nodeA, cost); // bidirectional
     }
+    public void markObstacle(Position pos) {
+        GraphNode node = getNode(pos);
+        if (node != null) {
+            node.setObstacle(true);
+        }
+    }
+
 
     public GraphNode getNode(Position position) {
         return nodes.get(position);

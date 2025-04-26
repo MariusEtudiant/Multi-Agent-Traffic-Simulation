@@ -40,6 +40,8 @@ public class DijkstraAlgorithm {
                 // déjà traité → on ignore cette entrée (entrée obsolète ou doublon)
                 continue;
             }
+            // ⚡ Si le noeud courant est sur un obstacle, on pénalise
+
             if (current.equals(goalNode)) {
                 // On a trouvé le but, on peut sortir
                 break;
@@ -50,7 +52,11 @@ public class DijkstraAlgorithm {
                 if (visited.contains(neighbor)) {
                     continue;
                 }
-                double alt = dist.get(current) + e.getValue();
+                double cost = e.getValue();
+                if (neighbor.hasObstacle()) {
+                    cost += 1000.0; // 💥 Coût énorme pour éviter ce chemin
+                }
+                double alt = dist.get(current) + cost;
                 if (alt < dist.get(neighbor)) {
                     dist.put(neighbor, alt);
                     prev.put(neighbor, current);
@@ -68,6 +74,11 @@ public class DijkstraAlgorithm {
             System.out.println("⚠️ Chemin introuvable entre " + start + " et " + goal);
             return Collections.emptyList();
         }
+        System.out.println("🗺️ Reconstruction chemin Dijkstra:");
+        for (Position p : path) {
+            System.out.println("   ➔ " + p);
+        }
+
         return path;
     }
 

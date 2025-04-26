@@ -1,5 +1,6 @@
 package org.example.agent;
 
+import javafx.scene.paint.Color;
 import org.example.environment.*;
 import org.example.logic.*;
 import org.example.planning.DijkstraAlgorithm;
@@ -7,6 +8,7 @@ import org.example.planning.Graph;
 import org.example.planning.GraphNode;
 
 import java.util.*;
+import java.util.List;
 
 /**
  * Vehicle agent class using a BDI (Belief-Desire-Intention) architecture to navigate a traffic simulation.
@@ -46,6 +48,7 @@ public class Vehicle {
     private static final long PLAN_COOLDOWN_MS = 1000;
     private long lastLaneChangeTime = 0;
     private static final long LANE_CHANGE_COOLDOWN_MS = 100;
+    private Color pathColor = Color.ORANGE;
 
     // Metrics
     private long startTime;
@@ -116,6 +119,11 @@ public class Vehicle {
         beliefs.addBelief(new Belief("HighSpeed", distanceToDest > 10 && lane.getVehicleSpeed(this) > 30.0));
         beliefs.addBelief(new Belief("CollisionRisk", beliefs.contains("CarAhead", true) && beliefs.contains("HighSpeed", true)));
 
+        boolean obstacleAhead = lane.getObstacles().stream()
+                .anyMatch(obs -> obs.getPosition().getX() > position.getX() &&
+                        obs.getPosition().getX() - position.getX() < 10);
+        beliefs.addBelief(new Belief("ObstacleAhead", obstacleAhead));
+
         if (distanceToDest < 5.0) {
             desires.stream()
                     .filter(d -> !d.getName().equals("REACH_DESTINATION"))
@@ -149,17 +157,19 @@ public class Vehicle {
     private void planIfNeeded() {
         if (beliefs.contains("AtDestination", true)) return;
 
-        boolean needsPlan = (path == null || path.isEmpty())
-                || (nextWaypointIdx >= path.size())
-                || beliefs.contains("ObstacleAhead", true)
-                || (beliefs.contains("InTrafficJam", true) && (System.currentTimeMillis() - lastPlanTime > 5000));
-
         long now = System.currentTimeMillis();
-        if (needsPlan && (now - lastPlanTime > PLAN_COOLDOWN_MS)) {
+
+        // Seulement replanifier dans 2 cas : obstacle ou chemin terminé
+        boolean mustReplan = beliefs.contains("ObstacleAhead", true)
+                || (path == null || path.isEmpty())
+                || (nextWaypointIdx >= path.size());
+
+        if (mustReplan && (now - lastPlanTime > PLAN_COOLDOWN_MS)) {
             plan();
             lastPlanTime = now;
         }
     }
+
 
     private void plan() {
         Graph roadGraph = (useGlobalGraph && environment != null)
@@ -209,43 +219,19 @@ public class Vehicle {
         double distanceToLight = getDistanceToNextLight();
         double brakingDistance = computeDynamicBrakingDistance(currentLane);
 
-        // Logique BDI — formules
-        LogicalFormula feuVert = new AtomFormula("FeuVert", true);
+        boolean obstacleDetected = beliefs.contains("ObstacleAhead", true);
+
+        // --- Priorité 1 : Urgences d'abord (feu rouge etc.) ---
         LogicalFormula feuRouge = new AtomFormula("FeuRouge", true);
         LogicalFormula feuOrange = new AtomFormula("FeuOrange", true);
         LogicalFormula carAhead = new AtomFormula("CarAhead", true);
         LogicalFormula carLeft = new AtomFormula("CarOnLeft", true);
         LogicalFormula carRight = new AtomFormula("CarOnRight", true);
-        LogicalFormula obstacle = new AtomFormula("ObstacleAhead", true);
-        LogicalFormula inTrafficJam = new AtomFormula("InTrafficJam", true);
-        LogicalFormula priorityVehicle = new AtomFormula("PriorityVehicle", true);
         LogicalFormula highSpeed = new AtomFormula("HighSpeed", true);
+        LogicalFormula priorityVehicle = new AtomFormula("PriorityVehicle", true);
 
-        // 🧭 Repositionnement vers waypoint.Y si possible
-        if (path != null && nextWaypointIdx < path.size()) {
-            Position target = path.get(nextWaypointIdx);
-            int targetY = target.getY();
-
-            if (position.getY() != targetY) {
-                boolean canChangeLane = (System.currentTimeMillis() - lastLaneChangeTime > LANE_CHANGE_COOLDOWN_MS);
-                boolean tryLeft = position.getY() > targetY;
-                boolean hasLane = tryLeft ? road.hasLeftLane(currentLane) : road.hasRightLane(currentLane);
-                boolean noCar = !beliefs.contains(tryLeft ? "CarOnLeft" : "CarOnRight", true);
-
-                if (canChangeLane && hasLane && noCar) {
-                    Intention turn = tryLeft ? Intention.TURN_LEFT : Intention.TURN_RIGHT;
-                    System.out.println("↪️ V" + id + " repositionnement vers Y=" + targetY + " → " + turn);
-                    tempIntentions.put(turn, -1);
-                    lastLaneChangeTime = System.currentTimeMillis();
-                } else {
-                    System.out.println("❌ Repositionnement impossible vers Y=" + targetY + " → hasLane=" + hasLane + ", noCar=" + noCar);
-                }
-            }
-        }
-
-        // 🚦 Feux
         if (feuRouge.evaluate(beliefs) && beliefs.contains("FeuDevant", true) && !beliefs.contains("FeuFranchi", true)
-                && distanceToLight > 0 && distanceToLight < brakingDistance + 4) {
+                && distanceToLight > 0 && distanceToLight < brakingDistance + 5) {
             if (distanceToLight < brakingDistance * 0.5) {
                 tempIntentions.put(Intention.STOP, 0);
             } else {
@@ -258,7 +244,6 @@ public class Vehicle {
             tempIntentions.put(Intention.SLOW_DOWN, 0);
         }
 
-        // 🚨 Risques
         if (new AndFormula(carAhead, highSpeed).evaluate(beliefs)) {
             tempIntentions.put(Intention.STOP, 0);
         }
@@ -268,54 +253,53 @@ public class Vehicle {
             tempIntentions.put(Intention.SLOW_DOWN, 0);
         }
 
-        // 🚘 Navigation libre
-        if ("REACH_DESTINATION".equals(desire.getName())) {
-            LogicalFormula canAccelerate = new AndFormula(feuVert, new AndFormula(new NotFormula(carAhead), new NotFormula(obstacle)));
-            if (canAccelerate.evaluate(beliefs)) {
-                tempIntentions.put(Intention.ACCELERATE, 1);
-            }
-
-            LogicalFormula canOvertake = new AndFormula(carAhead, new OrFormula(new NotFormula(carLeft), new NotFormula(carRight)));
-            if (obstacle.evaluate(beliefs) || canOvertake.evaluate(beliefs)) {
-                boolean canTurnLeft = !carLeft.evaluate(beliefs) && road.hasLeftLane(currentLane);
-                boolean canTurnRight = !carRight.evaluate(beliefs) && road.hasRightLane(currentLane);
-                if (canTurnLeft) tempIntentions.put(Intention.TURN_LEFT, 1);
-                else if (canTurnRight) tempIntentions.put(Intention.TURN_RIGHT, 1);
-                else tempIntentions.put(Intention.SLOW_DOWN, 1);
-            }
-        }
-
-        // 🧭 Suivi du chemin
-        if (path != null && !path.isEmpty()) {
+        // --- Priorité 2 : Suivre le chemin Dijkstra
+        if (path != null && !path.isEmpty() && nextWaypointIdx < path.size()) {
             Position target = path.get(nextWaypointIdx);
             double distanceToTarget = position.distanceTo(target);
 
-            // Seuil dynamique basé sur la vitesse
             double threshold = Math.max(2.0, currentLane.getVehicleSpeed(this) * 0.1);
             if (distanceToTarget < threshold) {
                 nextWaypointIdx = Math.min(nextWaypointIdx + 1, path.size() - 1);
                 target = path.get(nextWaypointIdx);
             }
 
-            // Calcul de la direction priorisant le chemin
             double dx = target.getX() - position.getX();
             double dy = target.getY() - position.getY();
 
-            if (Math.abs(dx) > 1.0) { // Prioriser l'axe X
-                tempIntentions.put(dx > 0 ? Intention.ACCELERATE : Intention.SLOW_DOWN, 2);
-            } else if (Math.abs(dy) > 1.0) { // Ajuster Y si nécessaire
-                boolean canChangeLane = (System.currentTimeMillis() - lastLaneChangeTime > LANE_CHANGE_COOLDOWN_MS);
-                if (dy > 0 && road.hasRightLane(currentLane) && canChangeLane) {
-                    tempIntentions.put(Intention.TURN_RIGHT, 2);
-                } else if (dy < 0 && road.hasLeftLane(currentLane) && canChangeLane) {
-                    tempIntentions.put(Intention.TURN_LEFT, 2);
+            if (Math.abs(dy) > 1.0) {
+                boolean canChangeLane = (System.currentTimeMillis() - lastLaneChangeTime > 1000); // cooldown
+
+                if (canChangeLane) {  // ✅ NOUVEAU : vérifie vraiment cooldown AVANT d'ajouter TURN
+                    if (dy > 0 && road.hasRightLane(currentLane)) {
+                        tempIntentions.put(Intention.TURN_RIGHT, -2);
+                    } else if (dy < 0 && road.hasLeftLane(currentLane)) {
+                        tempIntentions.put(Intention.TURN_LEFT, -2);
+                    }
+                } else {
+                    System.out.println("⏳ Cooldown changement de voie pas encore fini, pas de TURN proposé");
                 }
             }
         }
 
-        // 🔁 Fallback
+        // --- Priorité 3 : Gestion obstacle
+        if (obstacleDetected) {
+            // ⚠️ Tenter de changer de voie plutôt que de stopper
+            boolean canLeft = road.hasLeftLane(currentLane) && !beliefs.contains("CarOnLeft", true);
+            boolean canRight = road.hasRightLane(currentLane) && !beliefs.contains("CarOnRight", true);
+
+            if (canLeft) {
+                tempIntentions.put(Intention.TURN_LEFT, 1);
+            } else if (canRight) {
+                tempIntentions.put(Intention.TURN_RIGHT, 1);
+            } else {
+                tempIntentions.put(Intention.STOP, 2); // Si impossible -> STOP
+            }
+        }
+
+        // --- Fallback
         if (tempIntentions.isEmpty()) {
-            tempIntentions.put(Intention.ACCELERATE, 2);
+            tempIntentions.put(Intention.ACCELERATE, 5);
         }
 
         tempIntentions.entrySet().stream()
@@ -328,15 +312,21 @@ public class Vehicle {
 
 
 
+
+
     public void act() {
+        // Chercher le prochain target du chemin
+
         if (!intentions.isEmpty()) {
             Intention intention = intentions.poll();
             executedIntentions.add(intention);
-            executeIntention(intention);
+
+            Position target = (path != null && nextWaypointIdx < path.size()) ? path.get(nextWaypointIdx) : null;
+            executeIntention(intention, target);
         }
     }
 
-    private void executeIntention(Intention intention) {
+    private void executeIntention(Intention intention, Position target) {
         if (currentLane == null) {
             System.out.println("Erreur : Aucune lane définie");
             return;
@@ -363,14 +353,12 @@ public class Vehicle {
                     intentions.add(Intention.STOP);
                     return;
                 }
-                preciseX += 1.0 * speedFactor * directionFactor;
-                position = new Position((int) Math.round(preciseX), position.getY());
+                moveTowardsTarget(target,1.0);
                 System.out.println("🚗 [" + mode + "] Accélère vers " + position);
             }
 
             case SLOW_DOWN -> {
-                preciseX += 0.5 * speedFactor * directionFactor;
-                position = new Position((int) Math.round(preciseX), position.getY());
+                moveTowardsTarget(target, 0.5);
                 System.out.println("🐢 [" + mode + "] Ralentit vers " + position);
             }
 
@@ -479,6 +467,59 @@ public class Vehicle {
     public int getNextWaypointIndex() {
         return nextWaypointIdx;
     }
+    public void setPathColor(Color color) {
+        this.pathColor = color;
+    }
+
+    public Color getPathColor() {
+        return pathColor;
+    }
+    private void moveTowardsTarget(Position target, double speedMultiplier) {
+        if (target == null) {
+            int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
+            preciseX += speedMultiplier * speedFactor * directionFactor;
+            position = new Position((int) Math.round(preciseX), position.getY());
+            System.out.println("🚗 Avance simple vers " + position);
+            return;
+        }
+
+        double dx = target.getX() - position.getX();
+        double dy = target.getY() - position.getY();
+
+        // --- TOLERANCE pour éviter de changer de voie tout le temps
+        double laneChangeTolerance = 0.5;
+        long now = System.currentTimeMillis();
+
+        if (Math.abs(dy) > laneChangeTolerance) {
+            // --- Vérifier cooldown changement de voie
+            if (now - lastLaneChangeTime > 1000) {  // ✅ 1 seconde de délai minimal entre 2 changements
+                int targetY = target.getY();
+                if (Math.abs(position.getY() - targetY) > laneChangeTolerance) {
+                    position = new Position(position.getX(), targetY);
+                    lastLaneChangeTime = now; // ✅ update cooldown timer
+                    System.out.println("↔️ Changement de voie pour suivre Y = " + targetY);
+                    return; // ⚡ Change Y d'abord puis avance X au prochain cycle
+                }
+            } else {
+                System.out.println("⏳ Attente cooldown avant nouveau changement de voie...");
+            }
+        }
+
+        // --- Puis avancer vers le waypoint en X
+        if (Math.abs(dx) > 0.1) {
+            int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
+            double step = speedMultiplier * speedFactor * 1.5 * Math.signum(dx);
+
+            preciseX += step;
+            if (Math.abs(preciseX - position.getX()) >= 0.5) {
+                position = new Position((int) Math.round(preciseX), position.getY());
+            }
+
+            System.out.println((step > 0 ? "🚗" : "⬅️") + " Avance vers waypoint " + target);
+        }
+    }
+
+
 
 
 

@@ -211,56 +211,71 @@ public class Road {
 
     public void initGraphForPathfinding() {
         this.graph = new Graph();
-        int segmentLength = 10; // Résolution du graphe (tous les 10 mètres)
+        int segmentLength = 10;
 
-        // Création des nœuds pour toutes les voies à chaque segment
+        List<Position> obstaclePositions = new ArrayList<>();
+        for (Lane lane : lanes) {
+            for (Obstacle obstacle : lane.getObstacles()) {
+                obstaclePositions.add(obstacle.getPosition());  // sans snap
+            }
+        }
+
+        // Créer tous les nœuds possibles
         for (int x = 0; x <= this.length; x += segmentLength) {
             for (Lane lane : lanes) {
-                // Crée un nœud pour chaque position (x, y) où y est le centre de la voie
-                graph.getOrCreateNode(new Position(x, lane.getCenterYInt()));
+                Position pos = new Position(x, lane.getCenterYInt());
+                if (!obstaclePositions.contains(pos)) {
+                    graph.getOrCreateNode(pos);
+                }
             }
         }
 
-        // Connexions horizontales (avancer dans la même voie)
+        // Connecter horizontalement
+        // Connecter horizontalement (sans traverser d'obstacles)
         for (int x = 0; x <= this.length - segmentLength; x += segmentLength) {
             for (Lane lane : lanes) {
-                int y = lane.getCenterYInt();
-                graph.connect(new Position(x, y), new Position(x + segmentLength, y), segmentLength);
+                Position from = new Position(x, lane.getCenterYInt());
+                Position to = new Position(x + segmentLength, lane.getCenterYInt());
+
+                if (graph.getNode(from) != null && graph.getNode(to) != null) {
+                    boolean obstacleBetween = false;
+                    for (Position obstaclePos : obstaclePositions) {
+                        double obsX = obstaclePos.getX();
+                        int obsY = obstaclePos.getY();
+                        // Est-ce que obstacle est entre from et to sur la même lane
+                        if (obsY == from.getY() && obsX >= from.getX() - 1 && obsX <= to.getX() + 1) {
+                            obstacleBetween = true;
+                            break;
+                        }
+                    }
+
+                    if (!obstacleBetween) {
+                        graph.connect(from, to, segmentLength);
+                    }
+                }
             }
         }
 
-        // Connexions verticales (changement de voie)
+
+        // Connecter verticalement (changement de voie)
         for (int x = 0; x <= this.length; x += segmentLength) {
             for (int i = 0; i < lanes.size() - 1; i++) {
                 int y1 = lanes.get(i).getCenterYInt();
                 int y2 = lanes.get(i + 1).getCenterYInt();
 
-                // Coût de changement de voie (peut être ajusté)
-                double laneChangeCost = 5.0;
+                Position fromTop = new Position(x, y1);
+                Position toBottom = new Position(x, y2);
 
-                // Connexion bidirectionnelle entre voies adjacentes
-                graph.connect(new Position(x, y1), new Position(x, y2), laneChangeCost);
-                graph.connect(new Position(x, y2), new Position(x, y1), laneChangeCost);
-            }
-        }
-
-        // Intégration des obstacles
-        for (Lane lane : lanes) {
-            for (Obstacle obstacle : lane.getObstacles()) {
-                Position obsPos = obstacle.getPosition();
-                GraphNode obsNode = graph.getNode(obsPos.snapToGrid(segmentLength));
-                if (obsNode != null) {
-                    // Supprimer ou isoler le nœud concerné
-                    for (GraphNode neighbor : new ArrayList<>(obsNode.getNeighbors().keySet())) {
-                        neighbor.getNeighbors().remove(obsNode);
-                    }
-                    obsNode.getNeighbors().clear(); // plus de sortie
+                if (graph.getNode(fromTop) != null && graph.getNode(toBottom) != null) {
+                    graph.connect(fromTop, toBottom, 5.0); // changement de voie
+                    graph.connect(toBottom, fromTop, 5.0);
                 }
             }
         }
 
-        System.out.println("📌 Graphe généré automatiquement avec " + graph.getAllNodes().size() + " nœuds.");
+        System.out.println("📌 Graphe généré automatiquement sans obstacles, " + graph.getAllNodes().size() + " nœuds.");
     }
+
     public List<Lane> getLanes() {
         return new ArrayList<>(lanes); // Returns a copy for encapsulation
     }
