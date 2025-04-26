@@ -26,6 +26,8 @@ public class Road {
     // MDP control parameters
     private boolean useMDP = true;
     private int mdpDecisionInterval = 5;
+    private int tickCounter = 0;
+
 
     // Construct
     public Road(String id, double length, List<Position> entryPoints) {
@@ -173,25 +175,30 @@ public class Road {
 
 
     public void updateTrafficLights() {
+        tickCounter++;
+
         // 1. Mettre à jour les niveaux de trafic pour chaque feu
         for (TrafficLight light : trafficLights) {
             int vehicleCount = countVehiclesApproaching(light);
             light.updateTrafficLevel(vehicleCount);
         }
 
-        // 2. Prendre des décisions MDP pour chaque feu
-        for (TrafficLight light : trafficLights) {
-            light.mdpUpdate();
+        // 2. Appliquer les décisions MDP seulement tous les X ticks
+        if (useMDP && tickCounter % mdpDecisionInterval == 0) {
+            for (TrafficLight light : trafficLights) {
+                light.mdpUpdate();
+            }
         }
 
-        // 3. Appliquer la coordination entre feux
+        // 3. Coordination possible entre les feux (si plusieurs)
         coordinateTrafficLights();
 
-        // 4. Mettre à jour l'état des feux
+        // 4. Mise à jour d’état (permet les cycles ORANGE -> ROUGE, etc.)
         for (TrafficLight light : trafficLights) {
             light.update();
         }
     }
+
     public void updateTrafficConditions() {
         this.isCongested = checkCongestion();
         // Mettre à jour les probabilités de transition basées sur le trafic global
@@ -264,6 +271,29 @@ public class Road {
         }
         return null;
     }
+
+    public Lane getAdjacentLane(Lane currentLane, boolean toLeft) {
+        List<Lane> allLanes = this.getLanes();
+
+        // Trier les lanes de haut en bas (Y décroissant) pour déterminer la gauche/droite
+        allLanes.sort((l1, l2) -> Double.compare(l2.getCenterY(), l1.getCenterY()));
+
+        int index = allLanes.indexOf(currentLane);
+        if (index == -1) return null;
+
+        int targetIndex = toLeft ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= allLanes.size()) return null;
+
+        Lane targetLane = allLanes.get(targetIndex);
+        // On ne change que si les directions sont compatibles
+        if (targetLane.getDirection() == currentLane.getDirection()) {
+            return targetLane;
+        }
+
+        return null;
+    }
+
+
 
 
 }

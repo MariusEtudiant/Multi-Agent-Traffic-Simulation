@@ -112,13 +112,13 @@ public class Lane {
                         otherPos.getX() < currentPos.getX()) {
                     double distance = currentPos.distanceTo(otherPos);
                     if (distance < SAFE_DISTANCE) {
-                        System.out.println("Véhicule détecté à gauche : " + other);
+                        System.out.println("Vehicule detecte à gauche : " + other);
                         return true;
                     }
                 }
             }
         }
-        System.out.println("Aucun véhicule détecté à gauche.");
+        System.out.println("Aucun Vehicule detecte à gauche.");
         return false;
     }
 
@@ -127,12 +127,12 @@ public class Lane {
             if (!other.equals(vehicle)) {
                 double distance = vehicle.getPosition().distanceTo(other.getPosition());
                 if (distance < SAFE_DISTANCE && other.getPosition().getX() > vehicle.getPosition().getX()) {
-                    System.out.println("Véhicule détecté à droite : " + other + " à une distance de " + distance);
+                    System.out.println("Vehicule detecte à droite : " + other + " a une distance de " + distance);
                     return true;
                 }
             }
         }
-        System.out.println("Aucun véhicule détecté à droite.");
+        System.out.println("Aucun vehicule detecte a droite.");
         return false;
     }
 
@@ -146,7 +146,7 @@ public class Lane {
             Vehicle vehicle = iterator.next();
             if (vehicle.getBeliefs().contains("AtDestination", true)) {
                 iterator.remove();
-                System.out.println("Véhicule " + vehicle + " a atteint sa destination et a été retiré");
+                System.out.println("Vehicule " + vehicle + " a atteint sa destination et a ete retire");
             }
         }
     }
@@ -159,7 +159,7 @@ public class Lane {
             if (Math.abs(obsPos.getY() - vehiclePos.getY()) < 2) {
                 double distance = obsPos.getX() - vehiclePos.getX(); // Supprimer le traitement de direction
                 if (distance > 0 && distance < SAFE_DISTANCE) {
-                    System.out.println("Obstacle détecté à " + distance + "m");
+                    System.out.println("Obstacle detecte a " + distance + "m");
                     return true;
                 }
             }
@@ -175,7 +175,7 @@ public class Lane {
                 return trafficLight.getState();
             }
         }
-        System.err.println("AUCUN FEU TROUVÉ POUR: " + routeId); // Erreur visible
+        System.err.println("AUCUN FEU TROUVE POUR: " + routeId); // Erreur visible
         return null;
     }
 

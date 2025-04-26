@@ -9,7 +9,13 @@ public class DijkstraAlgorithm {
         GraphNode startNode = graph.getNode(start);
         GraphNode goalNode  = graph.getNode(goal);
         if (startNode == null || goalNode == null) {
-            System.out.println("❌ No start or goal node found in the graph.");
+            System.out.println("❌ Start/Goal introuvable");
+            System.out.println("🔍 Requête de start: " + start);
+            System.out.println("🔍 Requête de goal : " + goal);
+            System.out.println("📦 Noeuds existants dans le graphe :");
+            for (GraphNode node : graph.getAllNodes()) {
+                System.out.println("   ➤ " + node.getPosition());
+            }
             return Collections.emptyList();
         }
 

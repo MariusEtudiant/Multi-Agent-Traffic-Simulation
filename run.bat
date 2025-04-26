@@ -11,7 +11,7 @@ javac --module-path "%JAVA_FX%" --add-modules javafx.controls -cp "%TWEETY_LIB%\
 
 :: Exécution
 echo Lancement...
-java --module-path "%JAVA_FX%" --add-modules javafx.controls -cp "%CP%" org.example.gui.TrafficSimulatorApp
+java -Dfile.encoding=UTF-8 --module-path "%JAVA_FX%" --add-modules javafx.controls -cp "%CP%" org.example.gui.TrafficSimulatorApp -Dfile.encoding=UTF-8
 
 :: Nettoyage
 del sources.txt

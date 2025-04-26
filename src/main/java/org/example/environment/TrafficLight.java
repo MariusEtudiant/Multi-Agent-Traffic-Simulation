@@ -24,12 +24,15 @@ public class TrafficLight {
     private TrafficLevel currentTraffic;
     private Map<String, String> policy; // Learned policy
     private double[][] valueFunction; // State values
+    private boolean useMDP = true; // ✅ Par défaut on utilise le MDP
+
 
     // Q-learning parameters
     private Map<String, Map<String, Double>> qTable;
     private double alpha = 0.5; // Learning rate
     private double gamma = 0.9; // Discount factor
-    private double epsilon = 0.1; // Exploration rate
+    private double epsilon = 0.05;// Exploration rate
+
 
     private final TransitionMatrix transitionMatrix = new TransitionMatrix();
     private Position position;
@@ -63,22 +66,24 @@ public class TrafficLight {
 
     private List<String> getPossibleActions(LightColor currentColor) {
         List<String> actions = new ArrayList<>();
+
         switch (currentColor) {
-            case RED:
-                actions.add("STAY_RED");
-                actions.add("SWITCH_GREEN");
-                break;
-            case GREEN:
+            case GREEN -> {
                 actions.add("STAY_GREEN");
-                actions.add("SWITCH_ORANGE");
-                break;
-            case ORANGE:
+                actions.add("SWITCH_ORANGE"); // seul switch autorisé
+            }
+            case ORANGE -> {
                 actions.add("STAY_ORANGE");
-                actions.add("SWITCH_RED");
-                break;
+                actions.add("SWITCH_RED"); // seul switch autorisé
+            }
+            case RED -> {
+                actions.add("STAY_RED");
+                actions.add("SWITCH_GREEN"); // seul switch autorisé
+            }
         }
         return actions;
     }
+
 
 
     public void updateTrafficLevel(int vehicleCount) {
@@ -130,6 +135,7 @@ public class TrafficLight {
     }
 
     public void executeAction(String action) {
+
         switch (action) {
             case "STAY_RED":
             case "STAY_GREEN":
@@ -199,10 +205,7 @@ public class TrafficLight {
         }
         extractPolicy();
     }
-    private double getActionPenalty(String action) {
-        // Réduire la pénalité pour rester (encourager plus de changements)
-        return action.startsWith("STAY_") ? -2 : 0.3;
-    }
+
     private double[] getTrafficTransitionProbs(TrafficLevel currentLevel) {
         return transitionMatrix.getTrafficTransitionProbs(currentLevel);
     }
@@ -240,6 +243,11 @@ public class TrafficLight {
         }
 
         return total;
+    }
+    private double getActionPenalty(String action) {
+        // Récompense neutre ou bonus pour rester stable, pénalité pour changer
+        if (action.startsWith("STAY_")) return 0.5;
+        return -2.0; // Pénalité pour éviter les changements trop fréquents
     }
 
 
@@ -358,25 +366,50 @@ public class TrafficLight {
         return id;
     }
 
-    public void update(){
+    public void update() {
         stepCount++;
         if (stepCount % changeInterval == 0) {
-            toggleState();
+            if (!useMDP) {
+                toggleState();  // 🚦 Cyclique seulement en mode manuel
+            }
             stepCount = 0;
         }
     }
 
+    public void setUseMDP(boolean useMDP) {
+        this.useMDP = useMDP;
+    }
+
+    public boolean isUseMDP() {
+        return useMDP;
+    }
+
     public void toggleState() {
+        if (useMDP) {
+            // ✅ Ne rien faire : c’est le MDP qui contrôle
+            return;
+        }
+
+        // 🔁 Sinon, comportement par défaut
         switch (state) {
-            case GREEN:
-                state = LightColor.ORANGE;
-                break;
-            case ORANGE:
-                state = LightColor.RED;
-                break;
-            case RED:
-                state = GREEN;
-                break;
+            case GREEN -> state = LightColor.ORANGE;
+            case ORANGE -> state = LightColor.RED;
+            case RED -> state = LightColor.GREEN;
         }
     }
+
+    public Map<String, Double> getValueFunctionAsMap() {
+        Map<String, Double> map = new LinkedHashMap<>();
+        for (LightColor color : LightColor.values()) {
+            for (TrafficLevel level : TrafficLevel.values()) {
+                String key = color.name() + "_" + level.name();
+                double value = valueFunction[color.ordinal()][level.ordinal()];
+                map.put(key, value);
+            }
+        }
+        return map;
+    }
+
+
+
 }

@@ -35,31 +35,23 @@ public class TransitionMatrix {
                 Map<String, Double> stateTransitions = new HashMap<>();
                 int currentLevelIdx = TrafficLight.TrafficLevel.valueOf(currentLevel).ordinal();
 
-                // 1. Transition de couleur plus réaliste
-                if ("ORANGE".equals(color)) {
-                    // Orange passe principalement à Rouge (80%) ou parfois à Vert (20%)
-                    stateTransitions.put("RED_" + currentLevel, 0.8);
-                    stateTransitions.put("GREEN_" + currentLevel, 0.2);
-                } else if ("GREEN".equals(color)) {
-                    // Vert reste Vert (70%) ou passe à Orange (30%)
-                    stateTransitions.put("GREEN_" + currentLevel, 0.7);
-                    stateTransitions.put("ORANGE_" + currentLevel, 0.3);
-                } else { // RED
-                    // Rouge reste Rouge (60%) ou passe à Vert (40%)
-                    stateTransitions.put("RED_" + currentLevel, 0.6);
-                    stateTransitions.put("GREEN_" + currentLevel, 0.4);
+                switch (color) {
+                    case "GREEN" -> {
+                        stateTransitions.put("GREEN_" + currentLevel, 0.7);      // reste vert
+                        stateTransitions.put("ORANGE_" + currentLevel, 0.3);     // passe à orange
+                    }
+                    case "ORANGE" -> {
+                        stateTransitions.put("RED_" + currentLevel, 1.0);        // passe toujours à rouge
+                    }
+                    case "RED" -> {
+                        stateTransitions.put("RED_" + currentLevel, 0.6);        // reste rouge
+                        stateTransitions.put("GREEN_" + currentLevel, 0.4);      // passe à vert
+                    }
                 }
                 // 2. Transition de trafic plus progressive
                 for (String nextLevel : levels) {
                     int nextLevelIdx = TrafficLight.TrafficLevel.valueOf(nextLevel).ordinal();
                     double trafficProb = trafficChangeMatrix[currentLevelIdx][nextLevelIdx];
-
-                    // Répartir les probabilités de manière plus équilibrée
-                    for (String nextColor : colors) {
-                        String nextState = nextColor + "_" + nextLevel;
-                        // Réduire l'impact des transitions extrêmes
-                        stateTransitions.merge(nextState, trafficProb * 0.3, Double::sum);
-                    }
                 }
 
                 transitions.put(currentState, normalizeProbabilities(stateTransitions));
