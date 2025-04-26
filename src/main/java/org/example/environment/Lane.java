@@ -46,6 +46,7 @@ public class Lane {
             throw new IllegalStateException("Road " + id + " is at full capacity!");
         }
         vehicles.add(vehicle);
+        vehicle.setRoad(road);
     }
 
     public void addObstacle(Obstacle obstacle) {

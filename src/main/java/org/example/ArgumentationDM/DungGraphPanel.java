@@ -29,8 +29,14 @@ public class DungGraphPanel extends JPanel {
             Map.entry("A3","PUBLIC_TRANSPORT"), Map.entry("A10","PUBLIC_TRANSPORT"),
             Map.entry("A22","PUBLIC_TRANSPORT"), Map.entry("A25","PUBLIC_TRANSPORT"),
             Map.entry("A5","WALK"), Map.entry("A11","WALK"), Map.entry("A14","WALK"), Map.entry("A19","WALK"),
-            Map.entry("A7","BIKE"), Map.entry("A12","BIKE"), Map.entry("A21","BIKE"), Map.entry("A23","BIKE")
-    );
+            Map.entry("A7","BIKE"), Map.entry("A12","BIKE"), Map.entry("A21","BIKE"), Map.entry("A23","BIKE"),
+            Map.entry("A33", "WALK"),  // Santé faible, marche difficile
+            Map.entry("A41", "PUBLIC_TRANSPORT"),
+            Map.entry("A37", "BIKE"),Map.entry("A35", "Santé vélo-"),
+            Map.entry("A36", "Danger pluie vélo"),
+            Map.entry("A50", "Long trajet marche")
+
+            );
 
     // Labels lisibles pour chaque argument
     private static final Map<String,String> LABELS = Map.ofEntries(
@@ -47,7 +53,14 @@ public class DungGraphPanel extends JPanel {
             Map.entry("A4","Attente"), Map.entry("A6","Lent"),
             Map.entry("A8","Fatigant"), Map.entry("A9","Bouchons"),
             Map.entry("A24","Pollution"), Map.entry("A26","Surcharge"),
-            Map.entry("A31","Lignes rares"), Map.entry("A40","Inconfort")
+            Map.entry("A31","Lignes rares"), Map.entry("A40","Inconfort"),
+            Map.entry("A33", "Fatigue santé"),
+            Map.entry("A41", "Réseau saturé"),Map.entry("A37", "BIKE"),
+            Map.entry("A35", "BIKE"),   // Effort vélo avec santé fragile
+            Map.entry("A36", "BIKE"),   // Danger vélo pluie
+            Map.entry("A50", "WALK")   // Trop longue marche
+
+
     );
 
     public DungGraphPanel(DungTheory theory, Collection<Argument> accepted) {

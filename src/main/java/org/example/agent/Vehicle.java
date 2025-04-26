@@ -31,12 +31,17 @@ public class Vehicle {
     private Position previousPosition;
     private Lane currentLane;
     private Road road;
+    private boolean changingDirection = false; // Est-ce qu'on est en train de monter/descendre
+    private int verticalDirection = 0; // 1 = monter (Y+), -1 = descendre (Y-)
+
 
     private BeliefInitial beliefs;
     private List<Desire> desires;
     private List<Goal> goals;
     private Queue<Intention> intentions;
     private List<Intention> executedIntentions = new ArrayList<>();
+    private static final double EARLY_SLOWDOWN_DISTANCE = 15.0; // mètres
+
 
     private List<Position> path = new ArrayList<>();
     private int nextWaypointIdx = 0;
@@ -171,7 +176,7 @@ public class Vehicle {
     }
 
 
-    private void plan() {
+    public void plan() {
         Graph roadGraph = (useGlobalGraph && environment != null)
                 ? environment.getGlobalGraph()
                 : road.getGraph();
@@ -200,6 +205,11 @@ public class Vehicle {
         }
 
         List<Position> path = DijkstraAlgorithm.computePath(roadGraph, snappedStart, snappedGoal);
+
+        if (path == null || path.isEmpty()) {
+            System.out.println("❌ Aucun chemin trouvé pour V" + id + " !");
+            return;  // ❗ Ne pas assigner un chemin vide
+        }
 
         System.out.println("📍 Chemin trouvé pour V" + id + ":");
         for (int i = 0; i < path.size(); i++) {
@@ -253,12 +263,28 @@ public class Vehicle {
             tempIntentions.put(Intention.SLOW_DOWN, 0);
         }
 
+        Vehicle vehicleAhead = currentLane.getVehicleAhead(this);
+        if (vehicleAhead != null) {
+            double distanceToCarAhead = vehicleAhead.getPreciseX() - this.preciseX;
+
+            if (distanceToCarAhead < EARLY_SLOWDOWN_DISTANCE) {
+                System.out.println("⚠️ Ralentir : Véhicule détecté à " + distanceToCarAhead + "m devant");
+                if (distanceToCarAhead < 5) {
+                    tempIntentions.put(Intention.STOP, -5); // collision imminent
+                } else {
+                    tempIntentions.put(Intention.SLOW_DOWN, -3); // ralentir plus tôt
+                }
+            }
+        }
+
+
         // --- Priorité 2 : Suivre le chemin Dijkstra
         if (path != null && !path.isEmpty() && nextWaypointIdx < path.size()) {
             Position target = path.get(nextWaypointIdx);
             double distanceToTarget = position.distanceTo(target);
 
-            double threshold = Math.max(2.0, currentLane.getVehicleSpeed(this) * 0.1);
+            double threshold = Math.max(0.5, currentLane.getVehicleSpeed(this) * 0.05);
+
             if (distanceToTarget < threshold) {
                 nextWaypointIdx = Math.min(nextWaypointIdx + 1, path.size() - 1);
                 target = path.get(nextWaypointIdx);
@@ -267,7 +293,7 @@ public class Vehicle {
             double dx = target.getX() - position.getX();
             double dy = target.getY() - position.getY();
 
-            if (Math.abs(dy) > 1.0) {
+            if (Math.abs(dy) > 1.0 && distanceToTarget < 2.0) {
                 boolean canChangeLane = (System.currentTimeMillis() - lastLaneChangeTime > 1000); // cooldown
 
                 if (canChangeLane) {  // ✅ NOUVEAU : vérifie vraiment cooldown AVANT d'ajouter TURN
@@ -281,6 +307,7 @@ public class Vehicle {
                 }
             }
         }
+
 
         // --- Priorité 3 : Gestion obstacle
         if (obstacleDetected) {
@@ -299,7 +326,7 @@ public class Vehicle {
 
         // --- Fallback
         if (tempIntentions.isEmpty()) {
-            tempIntentions.put(Intention.ACCELERATE, 5);
+            tempIntentions.put(Intention.FOLLOW_PATH, 5);
         }
 
         tempIntentions.entrySet().stream()
@@ -363,16 +390,35 @@ public class Vehicle {
             }
 
             case STOP -> {
-                boolean stillNeedsStop = beliefs.contains("FeuRouge", true)
-                        && distanceToLight > 0 && distanceToLight < brakingDistance;
+                boolean stillNeedsStop = false;
+
+                Vehicle vehicleAhead = currentLane.getVehicleAhead(this);
+                if (vehicleAhead != null) {
+                    double distanceToCarAhead = vehicleAhead.getPreciseX() - this.preciseX;
+                    if (distanceToCarAhead < computeDynamicBrakingDistance(currentLane)) {
+                        stillNeedsStop = true;
+                    }
+                }
+
+                if (beliefs.contains("FeuRouge", true) && distanceToLight > 0 && distanceToLight < brakingDistance) {
+                    stillNeedsStop = true;
+                }
+
                 if (stillNeedsStop) {
-                    System.out.println("🛑 Maintien à l'arrêt : feu rouge à " + distanceToLight + "m");
+                    System.out.println("🛑 V" + id + " reste arrêté pour sécurité");
+                    // Ne bouge pas ! Véhicule bloqué
                 } else {
-                    System.out.println("🟢 Reprise après arrêt, situation dégagée → ACCELERATE");
+                    System.out.println("🟢 V" + id + " peut repartir, relance ACCELERATE");
                     intentions.clear();
-                    intentions.add(Intention.ACCELERATE);
+                    executeIntention(Intention.ACCELERATE, target);
                 }
             }
+            case FOLLOW_PATH -> {
+                moveTowardsTarget(path.get(nextWaypointIdx), 1.0);
+                System.out.println("🛤️ V" + id + " suit son chemin Dijkstra...");
+            }
+
+
 
             case TURN_LEFT, TURN_RIGHT -> {
                 boolean toLeft = (intention == Intention.TURN_LEFT);
@@ -475,6 +521,20 @@ public class Vehicle {
         return pathColor;
     }
     private void moveTowardsTarget(Position target, double speedMultiplier) {
+        if (changingDirection) {
+            // Mouvement vertical pur
+            double stepY = speedMultiplier * speedFactor * 1.5 * verticalDirection;
+            position = new Position(position.getX(), position.getY() + (int) Math.round(stepY));
+
+            // Lorsque suffisamment monté/descendu, on arrête
+            if (Math.abs(position.getY() - target.getY()) < 1) {
+                changingDirection = false;
+                verticalDirection = 0;
+                System.out.println("✅ Changement de direction terminé, reprend mouvement normal.");
+            }
+            return; // On ne bouge pas en X pendant qu'on monte
+        }
+
         if (target == null) {
             int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
             preciseX += speedMultiplier * speedFactor * directionFactor;
@@ -518,6 +578,36 @@ public class Vehicle {
             System.out.println((step > 0 ? "🚗" : "⬅️") + " Avance vers waypoint " + target);
         }
     }
+    // Dans ta classe Vehicle :
+
+    public Road getRoad() {
+        return road;
+    }
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
+
+    public void setPreciseX(double preciseX) {
+        this.preciseX = preciseX;
+    }
+    public void setRoad(Road road) {
+        this.road = road;
+    }
+    public void setChangingDirection(boolean changing) {
+        this.changingDirection = changing;
+    }
+
+    public void setVerticalDirection(int dir) {
+        this.verticalDirection = dir;
+    }
+
+    public boolean isChangingDirection() {
+        return changingDirection;
+    }
+
+
+
 
 
 

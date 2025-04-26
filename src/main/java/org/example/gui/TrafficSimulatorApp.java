@@ -37,6 +37,12 @@ public class TrafficSimulatorApp extends Application {
     private GraphicsContext gc;
     private ComboBox<String> scenarioSelector;
 
+    // --- Variables globales à ajouter --- (au début de ta classe)
+    private long lastSpawnTimeLane1 = 0;
+    private long lastSpawnTimeLane2 = 0;
+    private static final long SPAWN_COOLDOWN_MS = 5000; // 6 secondes
+    boolean laneToggle = false;
+
     private Environment environment;
     private List<Vehicle> vehicles;
     private Road road;
@@ -166,20 +172,20 @@ public class TrafficSimulatorApp extends Application {
         road.setMDPDecisionInterval(5);
 
         Vehicle v1 = new Vehicle(new Position(15, 1), new Position(100, -1), environment);
-        //Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment);
+        Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment);
         lane1.addVehicle(v1);
-        //lane1.addVehicle(v2);
+        lane1.addVehicle(v2);
 
-        //Vehicle v3 = new Vehicle(new Position(0, -1), new Position(100, 1), environment);
-        //Vehicle v4 = new Vehicle(new Position(11, -1), new Position(100, 1), environment);
-        //lane2.addVehicle(v3);
-        //lane2.addVehicle(v4);
+        Vehicle v3 = new Vehicle(new Position(0, -1), new Position(100, 1), environment);
+        Vehicle v4 = new Vehicle(new Position(11, -1), new Position(100, 1), environment);
+        lane2.addVehicle(v3);
+        lane2.addVehicle(v4);
 
-        vehicles.addAll(List.of(v1));//, v2, v3, v4));
+        vehicles.addAll(List.of(v1, v2, v3, v4));
         v1.setPathColor(Color.BLUE);
-        //v2.setPathColor(Color.GREEN);
-        //v3.setPathColor(Color.RED);
-        //v4.setPathColor(Color.PURPLE);
+        v2.setPathColor(Color.GREEN);
+        v3.setPathColor(Color.RED);
+        v4.setPathColor(Color.PURPLE);
         // Ajouter les obstacles
         Obstacle obs1 = new Obstacle(new Position(50, 1));     // Sur la lane du haut
         Obstacle obs2 = new Obstacle(new Position(20, -1));    // Sur la lane du bas
@@ -227,8 +233,12 @@ public class TrafficSimulatorApp extends Application {
         for (Vehicle v : vehicles) {
             int x = (int) (v.getPreciseX() * 7 + 100);
             int y = (v.getPosition().getY() == 1) ? 232 : 252;
+
+            double alpha = Math.min(1.0, (v.getPreciseX() + 5.0) / 10.0); // De 0% à 100% d'opacité
+            gc.setGlobalAlpha(alpha);
             gc.fillRect(x, y, 15, 10);
         }
+        gc.setGlobalAlpha(1.0);
 
         // Obstacles
         gc.setFill(Color.RED);
@@ -304,7 +314,7 @@ public class TrafficSimulatorApp extends Application {
                     step++;
                     System.out.printf("\n⏱️ Étape %02d\n", step);
 
-                    road.updateTrafficConditions();  // ⬅️ Juste ici !
+                    road.updateTrafficConditions();  // Mise à jour des conditions de trafic
 
                     // ✅ Ajouter les données du graphique
                     int count1 = lane1.getVehicles().size();
@@ -325,21 +335,45 @@ public class TrafficSimulatorApp extends Application {
 
                     lane1.removeArrivedVehicles();
                     lane2.removeArrivedVehicles();
-                    // ✅ Supprimer les véhicules qui ont atteint leur destination
                     vehicles.removeIf(v -> v.getBeliefs().contains("AtDestination", true));
                     lane1.getVehicles().removeIf(v -> v.getBeliefs().contains("AtDestination", true));
                     lane2.getVehicles().removeIf(v -> v.getBeliefs().contains("AtDestination", true));
+
+                    // ✅ Spawn automatique des nouveaux véhicules
+
+                    long currentTimeMillis = System.currentTimeMillis();
+
+                    if (currentTimeMillis - lastSpawnTimeLane1 > SPAWN_COOLDOWN_MS && Math.random() < 0.15) {
+                        if (canSpawnVehicleAtStart(lane1)) {
+                            Vehicle newVehicle = createRandomVehicle(lane1);
+                            lane1.addVehicle(newVehicle);
+                            vehicles.add(newVehicle);
+                            lastSpawnTimeLane1 = currentTimeMillis;
+                            System.out.println("🚗 Nouveau véhicule spawné sur voie 1 !");
+                        }
+                    }
+
+                    if (currentTimeMillis - lastSpawnTimeLane2 > SPAWN_COOLDOWN_MS && Math.random() < 0.15) {
+                        if (canSpawnVehicleAtStart(lane2)) {
+                            Vehicle newVehicle = createRandomVehicle(lane2);
+                            lane2.addVehicle(newVehicle);
+                            vehicles.add(newVehicle);
+                            lastSpawnTimeLane2 = currentTimeMillis;
+                            System.out.println("🚗 Nouveau véhicule spawné sur voie 2 !");
+                        }
+                    }
 
                     if (vehicles.isEmpty()) {
                         System.out.println("✅ Tous les véhicules sont arrivés. Fin de la simulation.");
                         this.stop();
                         simulationTimer = null;
                     }
+
                     drawFrame();
                     lastUpdate = now;
                 }
-
             }
+
         };
         simulationTimer.start();
     }
@@ -462,6 +496,46 @@ public class TrafficSimulatorApp extends Application {
 
         return chart;
     }
+
+    private boolean canSpawnVehicleAtStart(Lane lane) {
+        // Vérifie qu'aucun véhicule n'est trop proche dans la lane actuelle
+        for (Vehicle v : lane.getVehicles()) {
+            if (v.getPreciseX() < 15) {
+                return false;
+            }
+        }
+
+        // Et aussi vérifier l'autre voie
+        Lane otherLane = (lane == lane1) ? lane2 : lane1;
+        for (Vehicle v : otherLane.getVehicles()) {
+            if (v.getPreciseX() < 5) { // Plus strict sur l'autre voie
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+    private Vehicle createRandomVehicle(Lane lane) {
+        Position spawnPosition = new Position(0, lane.getCenterYInt());
+
+        // --- Destination aléatoire ---
+        int randomDestX = 80 + (int)(Math.random() * (100 - 80 - 5));
+        int destLaneY = Math.random() < 0.5 ? lane.getCenterYInt() : (lane == lane1 ? lane2.getCenterYInt() : lane1.getCenterYInt());
+        Position destination = new Position(randomDestX, destLaneY);
+
+        Vehicle vehicle = new Vehicle(spawnPosition, destination, environment);
+
+        // --- Couleur random ---
+        vehicle.setPathColor(Color.color(Math.random(), Math.random(), Math.random()));
+
+        // --- Apparition douce (baisse d'opacité au début -> géré dans drawFrame() plus bas)
+        vehicle.setPreciseX(-5.0); // Commence légèrement en arrière pour effet visuel progressif
+
+        return vehicle;
+    }
+
 
 
 
