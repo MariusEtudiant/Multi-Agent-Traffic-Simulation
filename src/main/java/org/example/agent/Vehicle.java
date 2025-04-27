@@ -63,7 +63,7 @@ public class Vehicle {
     private int frustrationCount = 0;
 
     // === Constructor ===
-    public Vehicle(Position position, Position destination, Environment environment) {
+    public Vehicle(Position position, Position destination, Environment environment,String weatherChoice, Boolean rushHourChoice) {
         this.id = nextId++;
         this.position = position;
         this.preciseX = position.getX();
@@ -76,8 +76,12 @@ public class Vehicle {
         this.goals = new ArrayList<>();
         this.intentions = new LinkedList<>();
 
-        // === Ajout pour décider dynamiquement le mode ===
-        TransportationAgent agent = new TransportationAgent(position, destination, randomWeather(), randomHealth(), randomRushHour());
+        String weather = weatherChoice.equals("Random") ? randomWeather() : weatherChoice;
+        boolean rushHour = (rushHourChoice == null) ? randomRushHour() : rushHourChoice;
+        boolean health = randomHealth();
+
+        //Ajout pour décider dynamiquement le mode
+        TransportationAgent agent = new TransportationAgent(position, destination, weather, health, rushHour);
         String decision = agent.decideTransportationModeWithoutSCR();
 
         switch (decision) {
@@ -85,7 +89,7 @@ public class Vehicle {
             case "PUBLIC_TRANSPORT" -> setMode(TransportationMode.PUBLIC_TRANSPORT);
             case "WALK" -> {
                 setMode(TransportationMode.WALK);
-                System.out.println("🚶 Il vaut mieux aller à pied !");
+                System.out.println("Il vaut mieux aller à pied!");
             }
             case "BIKE" -> setMode(TransportationMode.BIKE);
             default -> setMode(TransportationMode.CAR);
@@ -211,30 +215,30 @@ public class Vehicle {
         Position snappedStart = new Position(snappedX, startY);
         Position snappedGoal = new Position(Math.round((float) destination.getX() / 10) * 10, goalY);
 
-        System.out.println("🧠 V" + id + " planning:");
-        System.out.println("   position actuelle = " + position + ", lane Y = " + currentLane.getCenterYInt());
-        System.out.println("   snappedStart = " + snappedStart);
-        System.out.println("   destination = " + destination);
-        System.out.println("   snappedGoal = " + snappedGoal);
+        System.out.println("V" + id + " planning:");
+        System.out.println("position actuelle = " + position + ", lane Y = " + currentLane.getCenterYInt());
+        System.out.println("snappedStart = " + snappedStart);
+        System.out.println("destination = " + destination);
+        System.out.println("snappedGoal = " + snappedGoal);
 
         GraphNode startNode = roadGraph.getNode(snappedStart);
         GraphNode goalNode = roadGraph.getNode(snappedGoal);
 
         if (startNode == null || goalNode == null) {
-            System.out.println("❌ StartNode ou GoalNode introuvable dans le graphe !");
+            System.out.println("StartNode ou GoalNode introuvable dans le graphe !");
             return;
         }
 
         List<Position> path = DijkstraAlgorithm.computePath(roadGraph, snappedStart, snappedGoal);
 
         if (path == null || path.isEmpty()) {
-            System.out.println("❌ Aucun chemin trouvé pour V" + id + " !");
-            return;  // ❗ Ne pas assigner un chemin vide
+            System.out.println("Aucun chemin trouvé pour V" + id + " !");
+            return;
         }
 
-        System.out.println("📍 Chemin trouvé pour V" + id + ":");
+        System.out.println("Chemin trouvé pour V" + id + ":");
         for (int i = 0; i < path.size(); i++) {
-            System.out.println("   ➤ Waypoint " + i + ": " + path.get(i));
+            System.out.println("Waypoint " + i + ": " + path.get(i));
         }
 
         this.path = path;
@@ -290,11 +294,11 @@ public class Vehicle {
 
             if (distanceToCarAhead > 0) {
                 if (distanceToCarAhead < 5) {
-                    tempIntentions.put(Intention.STOP, -10);  // ⛔ Stop immédiat
-                    System.out.println("🛑 V" + id + " détecte véhicule devant à " + distanceToCarAhead + "m : STOP !");
+                    tempIntentions.put(Intention.STOP, -10);
+                    System.out.println("V" + id + " détecte véhicule devant à " + distanceToCarAhead + "m : STOP !");
                 } else if (distanceToCarAhead < 10) {
-                    tempIntentions.put(Intention.SLOW_DOWN, -5); // 🐢 Ralentir fortement
-                    System.out.println("🐢 V" + id + " ralentit, véhicule détecté à " + distanceToCarAhead + "m");
+                    tempIntentions.put(Intention.SLOW_DOWN, -5);
+                    System.out.println("V" + id + " ralentit, véhicule détecté à " + distanceToCarAhead + "m");
                 }
             }
         }
@@ -316,24 +320,21 @@ public class Vehicle {
             double dy = target.getY() - position.getY();
 
             if (Math.abs(dy) > 1.0 && distanceToTarget < 2.0) {
-                boolean canChangeLane = (System.currentTimeMillis() - lastLaneChangeTime > 1000); // cooldown
+                boolean canChangeLane = (System.currentTimeMillis() - lastLaneChangeTime > 1000);
 
-                if (canChangeLane) {  // ✅ NOUVEAU : vérifie vraiment cooldown AVANT d'ajouter TURN
+                if (canChangeLane) {
                     if (dy > 0 && road.hasRightLane(currentLane)) {
                         tempIntentions.put(Intention.TURN_RIGHT, -2);
                     } else if (dy < 0 && road.hasLeftLane(currentLane)) {
                         tempIntentions.put(Intention.TURN_LEFT, -2);
                     }
                 } else {
-                    System.out.println("⏳ Cooldown changement de voie pas encore fini, pas de TURN proposé");
+                    System.out.println("Cooldown changement de voie pas encore fini, pas de TURN proposé");
                 }
             }
         }
 
-
-        // --- Priorité 3 : Gestion obstacle
         if (obstacleDetected) {
-            // ⚠️ Tenter de changer de voie plutôt que de stopper
             boolean canLeft = road.hasLeftLane(currentLane) && !beliefs.contains("CarOnLeft", true);
             boolean canRight = road.hasRightLane(currentLane) && !beliefs.contains("CarOnRight", true);
 
@@ -342,7 +343,7 @@ public class Vehicle {
             } else if (canRight) {
                 tempIntentions.put(Intention.TURN_RIGHT, 1);
             } else {
-                tempIntentions.put(Intention.STOP, 2); // Si impossible -> STOP
+                tempIntentions.put(Intention.STOP, 2);
             }
         }
 
@@ -356,11 +357,10 @@ public class Vehicle {
                 .map(Map.Entry::getKey)
                 .forEach(intentions::add);
 
-        System.out.println("🎯 Intentions finales V" + id + " = " + intentions);
+        System.out.println("Intentions finales V" + id + " = " + intentions);
     }
 
     public void act() {
-        // Chercher le prochain target du chemin
 
         if (!intentions.isEmpty()) {
             Intention intention = intentions.poll();
@@ -379,7 +379,7 @@ public class Vehicle {
 
         if (beliefs.contains("AtDestination", true)) {
             if (endTime == null) endTime = System.currentTimeMillis();
-            System.out.println("✅ Véhicule arrivé à destination");
+            System.out.println("Véhicule arrivé à destination");
             return;
         }
 
@@ -388,23 +388,21 @@ public class Vehicle {
         boolean isRedLightNear = beliefs.contains("FeuRouge", true)
                 && distanceToLight > 0 && distanceToLight < brakingDistance;
 
-        int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
-
         switch (intention) {
             case ACCELERATE -> {
                 if (isRedLightNear) {
-                    System.out.println("⛔ V" + id + " voulait accélérer mais feu rouge proche ! STOP forcé.");
+                    System.out.println("V" + id + " voulait accélérer mais feu rouge proche ! STOP forcé.");
                     intentions.clear();
                     intentions.add(Intention.STOP);
                     return;
                 }
                 moveTowardsTarget(target,1.0);
-                System.out.println("🚗 [" + mode + "] Accélère vers " + position);
+                System.out.println(" [" + mode + "] Accélère vers " + position);
             }
 
             case SLOW_DOWN -> {
                 moveTowardsTarget(target, 0.5);
-                System.out.println("🐢 [" + mode + "] Ralentit vers " + position);
+                System.out.println(" [" + mode + "] Ralentit vers " + position);
             }
 
             case STOP -> {
@@ -425,10 +423,10 @@ public class Vehicle {
                 }
 
                 if (stillNeedsStop) {
-                    System.out.println("🛑 V" + id + " reste arrêté pour sécurité (danger toujours présent)");
+                    System.out.println("V" + id + " reste arrêté pour sécurité (danger toujours présent)");
                     // ➔ Le véhicule ne bouge pas
                 } else {
-                    System.out.println("🟢 V" + id + " n'a plus d'obstacle, repart !");
+                    System.out.println("V" + id + " n'a plus d'obstacle, repart !");
                     intentions.clear();
                     intentions.add(Intention.ACCELERATE);
                 }
@@ -438,9 +436,9 @@ public class Vehicle {
             case FOLLOW_PATH -> {
                 if (path != null && !path.isEmpty() && nextWaypointIdx < path.size()) {
                     moveTowardsTarget(path.get(nextWaypointIdx), 1.0);
-                    System.out.println("🛤️ V" + id + " suit son chemin Dijkstra...");
+                    System.out.println("V" + id + " suit son chemin Dijkstra...");
                 } else {
-                    System.out.println("⚠️ V" + id + " a FOLLOW_PATH mais son chemin est vide ou terminé !");
+                    System.out.println("V" + id + " a FOLLOW_PATH mais son chemin est vide ou terminé !");
                     plan();  // Essaie de replanifier un chemin si possible
                 }
             }
@@ -452,36 +450,36 @@ public class Vehicle {
                 boolean toLeft = (intention == Intention.TURN_LEFT);
                 Lane targetLane = road.getAdjacentLane(currentLane, toLeft);
 
-                System.out.println("↔️ V" + id + " veut tourner " + (toLeft ? "à gauche" : "à droite"));
+                System.out.println("V" + id + " veut tourner " + (toLeft ? "à gauche" : "à droite"));
                 if (targetLane == null) {
-                    System.out.println("   ❌ Aucune voie adjacente trouvée");
+                    System.out.println("Aucune voie adjacente trouvée");
                     return;
                 }
 
                 if (!targetLane.isSameDirection(currentLane)) {
-                    System.out.println("   ❌ Voie adjacente n'a pas la même direction");
+                    System.out.println("Voie adjacente n'a pas la même direction");
                     return;
                 }
 
                 boolean safe = true;
                 for (Vehicle v : targetLane.getVehicles()) {
                     double dx = Math.abs(v.getPreciseX() - this.preciseX);
-                    System.out.println("   ↪︎ V" + v.getId() + " à " + dx + "m dans la voie cible");
+                    System.out.println("V" + v.getId() + " à " + dx + "m dans la voie cible");
                     if (dx < 2) {
                         safe = false;
                     }
                 }
 
                 if (safe) {
-                    System.out.println("   ✅ Changement de voie autorisé");
+                    System.out.println("Changement de voie autorisé");
                     currentLane.removeVehicle(this);
                     currentLane = targetLane;
                     targetLane.addVehicle(this);
                     position = new Position(position.getX(), targetLane.getCenterYInt());
                     this.plan();
-                    System.out.println("↔️ V" + id + " a changé " + (toLeft ? "à gauche" : "à droite") + " vers " + targetLane.getId());
+                    System.out.println("V" + id + " a changé " + (toLeft ? "à gauche" : "à droite") + " vers " + targetLane.getId());
                 } else {
-                    System.out.println("⛔ V" + id + " trop proche d'un véhicule pour changer de voie !");
+                    System.out.println("V" + id + " trop proche d'un véhicule pour changer de voie !");
                 }
             }
 
@@ -503,13 +501,6 @@ public class Vehicle {
         this.previousPosition = new Position(position.getX(), position.getY());
     }
 
-    private double getDistanceToNextLight() {
-        return road.getTrafficLights().stream()
-                .map(road::getTrafficLightPosition)
-                .filter(pos -> pos.getX() > position.getX())
-                .mapToDouble(pos -> pos.getX() - position.getX())
-                .min().orElse(0.0);
-    }
 
     private double computeDynamicBrakingDistance(Lane lane) {
         double base = switch (mode) {
@@ -563,7 +554,6 @@ public class Vehicle {
                 System.out.println("➡️ Arrivé au waypoint, avance au suivant !");
             }
         }
-        // 🛑 Avant tout, si très proche du waypoint => avance au suivant
         if (changingDirection) {
             // Mouvement vertical pur
             double stepY = speedMultiplier * speedFactor * 1.5 * verticalDirection;
@@ -573,16 +563,16 @@ public class Vehicle {
             if (Math.abs(position.getY() - target.getY()) < 1) {
                 changingDirection = false;
                 verticalDirection = 0;
-                System.out.println("✅ Changement de direction terminé, reprend mouvement normal.");
+                System.out.println("Changement de direction terminé, reprend mouvement normal.");
             }
-            return; // On ne bouge pas en X pendant qu'on monte
+            return; //On ne bouge pas en X pendant qu'on monte
         }
 
         if (target == null) {
             int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
             preciseX += speedMultiplier * speedFactor * directionFactor;
             position = new Position((int) Math.round(preciseX), position.getY());
-            System.out.println("🚗 Avance simple vers " + position);
+            System.out.println("Avance simple vers " + position);
             return;
         }
 
@@ -590,22 +580,22 @@ public class Vehicle {
         double dx = target.getX() - position.getX();
         double dy = target.getY() - position.getY();
 
-        // --- TOLERANCE pour éviter de changer de voie tout le temps
+        //TOLERANCE pour éviter de changer de voie tout le temps
         double laneChangeTolerance = 0.5;
         long now = System.currentTimeMillis();
 
         if (Math.abs(dy) > laneChangeTolerance) {
-            // --- Vérifier cooldown changement de voie
-            if (now - lastLaneChangeTime > 1000) {  // ✅ 1 seconde de délai minimal entre 2 changements
+            //Vérifier cooldown changement de voie
+            if (now - lastLaneChangeTime > 1000) {
                 int targetY = target.getY();
                 if (Math.abs(position.getY() - targetY) > laneChangeTolerance) {
                     position = new Position(position.getX(), targetY);
-                    lastLaneChangeTime = now; // ✅ update cooldown timer
-                    System.out.println("↔️ Changement de voie pour suivre Y = " + targetY);
-                    return; // ⚡ Change Y d'abord puis avance X au prochain cycle
+                    lastLaneChangeTime = now;
+                    System.out.println("Changement de voie pour suivre Y = " + targetY);
+                    return; //Change Y d'abord puis avance X au prochain cycle
                 }
             } else {
-                System.out.println("⏳ Attente cooldown avant nouveau changement de voie...");
+                System.out.println("Attente cooldown avant nouveau changement de voie...");
             }
         }
 
@@ -613,12 +603,12 @@ public class Vehicle {
         if (vehicleAhead != null) {
             double distanceToVehicle = vehicleAhead.getPreciseX() - this.preciseX;
             if (distanceToVehicle > 0 && distanceToVehicle < 10) {
-                System.out.println("🚦 V" + id + " stoppe car véhicule devant à " + distanceToVehicle + "m !");
+                System.out.println(" V" + id + " stoppe car véhicule devant à " + distanceToVehicle + "m !");
                 return;
             }
         }
 
-        // --- Puis avancer vers le waypoint en X
+        //Puis avancer vers le waypoint en X
         if (Math.abs(dx) > 0.1) {
             int directionFactor = (currentLane.getDirection() == Lane.DIRECTION_LEFT) ? -1 : 1;
             double step = speedMultiplier * speedFactor * 1.5 * Math.signum(dx);
@@ -628,14 +618,21 @@ public class Vehicle {
                 position = new Position((int) Math.round(preciseX), position.getY());
             }
 
-            System.out.println((step > 0 ? "🚗" : "⬅️") + " Avance vers waypoint " + target);
+            System.out.println((step > 0 ? "car" : "<=") + " Avance vers waypoint " + target);
         }
     }
-    // Dans ta classe Vehicle :
 
     public Road getRoad() {
         return road;
     }
+    private double getDistanceToNextLight() {
+        return road.getTrafficLights().stream()
+                .map(road::getTrafficLightPosition)
+                .filter(pos -> pos.getX() > position.getX())
+                .mapToDouble(pos -> pos.getX() - position.getX())
+                .min().orElse(0.0);
+    }
+    //setters
 
     public void setPosition(Position position) {
         this.position = position;
@@ -671,13 +668,5 @@ public class Vehicle {
     private static boolean randomRushHour() {
         return new Random().nextBoolean();
     }
-
-
-
-
-
-
-
-
 
 }

@@ -55,6 +55,9 @@ public class TrafficSimulatorApp extends Application {
     private TrafficLight trafficLight;
     private int step = 0;
     private final List<TrafficLight.LightColor> feuStates = new ArrayList<>();
+    private String globalWeather = "Random";
+    private Boolean globalRushHour = null;
+
 
     private AnimationTimer simulationTimer;
     private boolean showPaths = false; //Global
@@ -161,9 +164,26 @@ public class TrafficSimulatorApp extends Application {
                 learningMode = LearningMode.VALUE_ITERATION;
             }
         });
+        ComboBox<String> weatherSelector = new ComboBox<>();
+        weatherSelector.getItems().addAll("Random", "Sunny", "Cloudy", "Rainy");
+        weatherSelector.setValue("Random");
+        weatherSelector.setOnAction(e -> globalWeather = weatherSelector.getValue());
+
+        ComboBox<String> rushHourSelector = new ComboBox<>();
+        rushHourSelector.getItems().addAll("Random", "Rush Hour", "Normal Traffic");
+        rushHourSelector.setValue("Random");
+        rushHourSelector.setOnAction(e -> {
+            String choice = rushHourSelector.getValue();
+            if (choice.equals("Rush Hour")) globalRushHour = true;
+            else if (choice.equals("Normal Traffic")) globalRushHour = false;
+            else globalRushHour = null;
+        });
 
 
-        controlPanel.getChildren().addAll(new Label("Choix du scénario:"), scenarioSelector, learningModeSelector,startBtn,pauseResumeBtn, resetBtn,showChartBtn, mdpToggleBtn, showRewardChartBtn, togglePathBtn);
+
+        controlPanel.getChildren().addAll(new Label("Choix du scénario:"), scenarioSelector,new Label("Météo:"), weatherSelector,
+                new Label("Rush Hour:"), rushHourSelector,
+                learningModeSelector,startBtn,pauseResumeBtn, resetBtn,showChartBtn, mdpToggleBtn, showRewardChartBtn, togglePathBtn);
         return controlPanel;
     }
 
@@ -209,13 +229,13 @@ public class TrafficSimulatorApp extends Application {
 
 
 
-        Vehicle v1 = new Vehicle(new Position(25, 1), new Position(100, -1), environment);
-        Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment);
+        Vehicle v1 = new Vehicle(new Position(25, 1), new Position(100, -1), environment, globalWeather,globalRushHour);
+        Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment,globalWeather,globalRushHour);
         lane1.addVehicle(v1);
         lane1.addVehicle(v2);
 
-        Vehicle v3 = new Vehicle(new Position(0, -1), new Position(100, 1), environment);
-        Vehicle v4 = new Vehicle(new Position(11, -1), new Position(100, 1), environment);
+        Vehicle v3 = new Vehicle(new Position(0, -1), new Position(100, 1), environment,globalWeather,globalRushHour);
+        Vehicle v4 = new Vehicle(new Position(11, -1), new Position(100, 1), environment,globalWeather,globalRushHour);
         lane2.addVehicle(v3);
         lane2.addVehicle(v4);
 
@@ -599,7 +619,7 @@ public class TrafficSimulatorApp extends Application {
 
             //vérifier si start et goal existent
             if (globalGraph.getNode(spawnPosition) != null && globalGraph.getNode(destination) != null) {
-                Vehicle vehicle = new Vehicle(spawnPosition, destination, environment);
+                Vehicle vehicle = new Vehicle(spawnPosition, destination, environment, globalWeather, globalRushHour);
                 vehicle.setPathColor(Color.color(Math.random(), Math.random(), Math.random()));
                 vehicle.setPreciseX(-5.0);
                 return vehicle;
