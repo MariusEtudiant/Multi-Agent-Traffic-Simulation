@@ -14,20 +14,15 @@ public class Desire {
         this.priority = priority;
         this.isAchieved = false;
     }
-
     public boolean isAchieved() {
         return isAchieved;
     }
     public void achieve() {
         this.isAchieved = true;
     }
-    public void setAchieved(boolean achieved) {
-        isAchieved = achieved;
-    }
     public void reset() {
         this.isAchieved = false;
     }
-
     public String getName() {
         return name;
     }

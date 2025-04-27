@@ -18,7 +18,6 @@ public class Goal {
     public boolean isAchieved(BeliefInitial beliefs) {
         return successCondition.evaluate(beliefs);
     }
-
     public Desire getDesire() {
         return desire;
     }

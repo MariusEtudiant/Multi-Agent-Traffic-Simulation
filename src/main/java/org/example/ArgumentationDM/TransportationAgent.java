@@ -1,9 +1,7 @@
 /*
  * TransportationAgent.java
- * -------------------------
  * Agent de choix du mode de transport via argumentation (Tweety).
- * Utilise la mesure scr(d) = (pros - 0.5 * cons) / (pros + cons) + mini-prior,
- * puis normalise pour obtenir des pourcentages.
+ * puis normalise pour obtenir des pourcentages (cf rapport pour plus de détails)
  */
 package org.example.ArgumentationDM;
 
@@ -65,10 +63,10 @@ public class TransportationAgent {
      * @return Map<Mode, Pourcentage>
      */
     public Map<String, Double> getModeScoresScr() {
-        // 1) Construction du cadre argumentatif
+        // 1)cadre argumentatif
         DungTheory framework = buildFramework();
 
-        // 2) Cartographie des arguments pros/cons par mode
+        // 2)cartographie des arguments pros/cons par mode
         Map<String, String> posArgs = Map.ofEntries(
                 Map.entry("A13", "CAR"), Map.entry("A18", "CAR"),
                 Map.entry("A28", "CAR"), Map.entry("A30", "CAR"),
@@ -89,7 +87,7 @@ public class TransportationAgent {
                 Map.entry("A8", "BIKE"), Map.entry("A35", "BIKE"), Map.entry("A36", "BIKE"), Map.entry("A37", "BIKE")
         );
 
-        // 3) Préparation des raisonners (4 sémantiques)
+        // 3)préparation des raisonners (4 sémantiques)
         List<AbstractExtensionReasoner> reasoners = List.of(
                 new SimpleGroundedReasoner(),
                 new SimplePreferredReasoner(),
@@ -97,7 +95,7 @@ public class TransportationAgent {
                 new SimpleStableReasoner()
         );
 
-        // 4) Accumulation des scores raw
+        // 4)accumulation des scores raw
         Map<String, Double> raw = MODES.stream()
                 .collect(Collectors.toMap(Function.identity(), m -> 0.0));
         for (AbstractExtensionReasoner r : reasoners) {
@@ -115,20 +113,19 @@ public class TransportationAgent {
             }
         }
 
-        // 5) Moyenne sur les 4 sémantiques
+        // 5)Moyenne sur les 4 sémantiques
         int n = reasoners.size();
 
-        // 6) Prior adaptatif
+        // 6)prior adaptatif
         Map<String, Double> prior = new LinkedHashMap<>();
         double dist = start.distanceTo(destination);
 
-        // prior par défaut
+        //prior par défaut
         prior.put("CAR", 0.35);
         prior.put("PUBLIC_TRANSPORT", 0.25);
         prior.put("WALK", 0.15);
         prior.put("BIKE", 0.10);
-
-        // ajustements dynamiques
+        //ajustements dynamiques
         if (dist < 30) {
             prior.put("WALK", prior.get("WALK") + 0.15);
             prior.put("CAR", prior.get("CAR") - 0.10);
@@ -151,7 +148,7 @@ public class TransportationAgent {
             prior.put("PUBLIC_TRANSPORT", prior.get("PUBLIC_TRANSPORT") + 0.05);
         }
 
-        // 7) Combinaison et normalisation en %
+        // 7)combinaison et normalisation en %
         Map<String, Double> combined = new LinkedHashMap<>();
         double total = 0.0;
         for (String mode : MODES) {
@@ -171,7 +168,6 @@ public class TransportationAgent {
     /**
      * Construit le graphe d'arguments selon le contexte (attaques conditionnelles).
      */
-    /* ======= Graphe ======= */
     public DungTheory buildFramework() {
         DungTheory th = new DungTheory();
         Map<String, Argument> A = new HashMap<>();
@@ -181,9 +177,9 @@ public class TransportationAgent {
             return a;
         });
 
-        // === Arguments & attaques de base ===
+        //Arguments & attaques de base
 
-        // --- CAR ---
+        //CAR
         th.addAttack(arg.apply("A28"), arg.apply("A1"));    // Disponible vs coût
         th.addAttack(arg.apply("A13"), arg.apply("A2"));    // Confort défend coût
         th.addAttack(arg.apply("A18"), arg.apply("A2"));    // Vitesse défend coût
@@ -195,13 +191,13 @@ public class TransportationAgent {
         th.addAttack(arg.apply("A18"), arg.apply("A26"));
 
 
-        // --- PUBLIC TRANSPORT ---
+        //PUBLIC TRANSPORT
         th.addAttack(arg.apply("A4"), arg.apply("A3"));      // Attente vs PT
         th.addAttack(arg.apply("A22"), arg.apply("A1"));    // Pas besoin de parking vs voiture
         th.addAttack(arg.apply("A25"), arg.apply("A4"));    // Réseau compense attente
 
 
-        // --- WALK ---
+        //WALK
         if (start.distanceTo(destination) > 50) {
             th.addAttack(arg.apply("A6"), arg.apply("A5"));      // Trop lent
         }
@@ -214,7 +210,7 @@ public class TransportationAgent {
             th.addAttack(arg.apply("A33"), arg.apply("A5")); // Marche trop fatigante si santé faible
 
 
-        // --- BIKE ---
+        //BIKE
         th.addAttack(arg.apply("A8"), arg.apply("A7"));      // Effort
         th.addAttack(arg.apply("A12"), arg.apply("A8"));     // Évite trafic
         th.addAttack(arg.apply("A21"), arg.apply("A8"));     // Écologique
@@ -222,20 +218,20 @@ public class TransportationAgent {
         if (!isHealthy)
             th.addAttack(arg.apply("A35"), arg.apply("A7")); // Pas assez en forme
 
-        // === Conditions contextuelles regroupées ===
+        //Conditions contextuelles regroupées
 
         if (isRushHour) {
-            // 🚗 Voiture
+            //Voiture
             th.addAttack(arg.apply("A9"), arg.apply("A18"));     // Bouchons
 
-            // 🚆 Public Transport
+            //Public Transport
             th.addAttack(arg.apply("A26"), arg.apply("A3"));     // Surcharge
             th.addAttack(arg.apply("A40"), arg.apply("A3"));     // Inconfort
             th.addAttack(arg.apply("A41"), arg.apply("A25"));    // Réseau saturé
         }
 
         if (weather.equalsIgnoreCase("Rainy")) {
-            // 🌧️ Pluie affecte les transports publics et vélo
+            //Pluie affecte les transports publics et vélo
             th.addAttack(arg.apply("A31"), arg.apply("A3"));     // Moins fiable
             th.addAttack(arg.apply("A60"), arg.apply("A31"));    // Voiture au sec
             th.addAttack(arg.apply("A61"), arg.apply("A36"));    // Plus sûre que le vélo
@@ -246,7 +242,7 @@ public class TransportationAgent {
         return th;
     }
 
-    // ===== Utilitaires =====
+    //utilitaires
     private static double round2(double v) {
         return Math.round(v * 100.0) / 100.0;
     }
@@ -278,7 +274,7 @@ public class TransportationAgent {
         DungTheory framework = buildFramework();
         Extension accepted = new SimpleGroundedReasoner().getModel(framework);
 
-        // Arguments associés aux modes
+        //arguments associés aux modes
         Map<String, String> posArgs = Map.ofEntries(
                 Map.entry("A13", "CAR"), Map.entry("A18", "CAR"),
                 Map.entry("A28", "CAR"), Map.entry("A30", "CAR"),
@@ -300,7 +296,7 @@ public class TransportationAgent {
                 Map.entry("A8", "BIKE"), Map.entry("A35", "BIKE"), Map.entry("A36", "BIKE"), Map.entry("A37", "BIKE")
         );
 
-        // 1. Compter les arguments favorables acceptés
+        //1) Compter les arguments favorables acceptés
         Map<String, Integer> proCount = new HashMap<>();
         for (Object obj : accepted) {
             Argument a = (Argument) obj;
@@ -310,7 +306,7 @@ public class TransportationAgent {
             }
         }
 
-        // 2. Vérifier s'il y a des arguments défavorables acceptés pour éliminer des modes
+        //2) Vérifier s'il y a des arguments défavorables acceptés pour éliminer des modes
         Set<String> modesWithCons = new HashSet<>();
         for (Object obj : accepted) {
             Argument a = (Argument) obj;
@@ -320,7 +316,7 @@ public class TransportationAgent {
             }
         }
 
-        // 3. Filtrer les modes sans défaut accepté
+        //3) Filtrer les modes sans défaut accepté
         List<String> eligibleModes = new ArrayList<>();
         for (String mode : MODES) {
             if (!modesWithCons.contains(mode)) {
@@ -329,17 +325,16 @@ public class TransportationAgent {
         }
 
         if (eligibleModes.isEmpty()) {
-            // Si tous les modes ont au moins un défaut accepté, choisir celui avec le plus de pros
+            //si tous les modes ont au moins un défaut accepté, choisir celui avec le plus de pros
             return proCount.entrySet().stream()
                     .max(Map.Entry.comparingByValue())
                     .map(Map.Entry::getKey)
                     .orElse("CAR");
         } else {
-            // Sinon, parmi les modes éligibles, choisir celui avec le plus de pros
+            //sinon, parmi les modes éligibles, choisir celui avec le plus de pros
             return eligibleModes.stream()
                     .max(Comparator.comparingInt(m -> proCount.getOrDefault(m, 0)))
                     .orElse("CAR");
         }
     }
-
 }

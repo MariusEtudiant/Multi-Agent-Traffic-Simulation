@@ -23,12 +23,9 @@ public class Graph {
             node.setObstacle(true);
         }
     }
-
-
     public GraphNode getNode(Position position) {
         return nodes.get(position);
     }
-
     public Collection<GraphNode> getAllNodes() {
         return nodes.values();
     }

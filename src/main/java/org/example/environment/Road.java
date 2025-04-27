@@ -15,7 +15,7 @@ public class Road {
     private final String id;
     private final double length;
     private static final int maxCapacity = 40;
-    private final List<Position> entryPoints;  // entry points/end (intersections etc)
+    private final List<Position> entryPoints;  // entry points/end
     private final List<TrafficLight> trafficLights;
     private List<Position> trafficLightPositions = new ArrayList<>();
     private final List<Lane> lanes;
@@ -23,13 +23,12 @@ public class Road {
     private RoadCondition condition = RoadCondition.DRY;
     private Graph graph;
 
-    // MDP control parameters
+    //MDP control
     private boolean useMDP = true;
     private int mdpDecisionInterval = 5;
     private int tickCounter = 0;
 
-
-    // Construct
+    //Construct
     public Road(String id, double length, List<Position> entryPoints) {
         this.id = id;
         this.length = length;
@@ -38,23 +37,12 @@ public class Road {
         this.trafficLights = new ArrayList<>();
         this.lanes = new ArrayList<>();
     }
-    // for the next semester
     public enum RoadCondition{
         DRY(1.0), WET(0.7), ICY(0.3);
-
         private final double frictionFactor;
-
         RoadCondition(double frictionFactor) {
             this.frictionFactor = frictionFactor;
         }
-    }
-
-    public void setCondition(RoadCondition condition) {
-        this.condition = condition;
-    }
-
-    public RoadCondition getCondition() {
-        return condition;
     }
 
     public void addLane(Lane lane) {
@@ -75,18 +63,7 @@ public class Road {
         int index = lanes.indexOf(currentLane);
         return index < lanes.size() - 1;
     }
-    public boolean isCongested() {
-        return isCongested;
-    }
 
-    public Lane getRightLane(Lane currentLane) {
-        if (!hasRightLane(currentLane)) return null;
-        return lanes.get(lanes.indexOf(currentLane) + 1);
-    }
-    public Lane getLeftLane(Lane currentLane) {
-        if (!hasLeftLane(currentLane)) return null;
-        return lanes.get(lanes.indexOf(currentLane) - 1);
-    }
     public String getId() {
         return id;
     }
@@ -99,8 +76,7 @@ public class Road {
 
     private void coordinateTrafficLights() {
         if (trafficLights.size() <= 1) return;
-
-        // Trouver le feu avec le plus de trafic
+        //trouver le feu avec le plus de trafic
         TrafficLight busiestLight = null;
         int maxTraffic = -1;
 
@@ -111,8 +87,7 @@ public class Road {
                 busiestLight = light;
             }
         }
-
-        // Mettre le feu le plus chargé au vert, les autres au rouge
+        //mettre le feu le plus chargé au vert, les autres au rouge
         if (busiestLight != null) {
             for (TrafficLight light : trafficLights) {
                 if (light == busiestLight) {
@@ -134,7 +109,6 @@ public class Road {
         return totalVehicles > maxCapacity * CONGESTION_THRESHOLD;
     }
 
-    // New methods for MDP control
     public void enableMDP(boolean enable) {
         this.useMDP = enable;
     }
@@ -146,14 +120,14 @@ public class Road {
     public void trainTrafficLights() {
         for (TrafficLight light : trafficLights) {
             light.printTransitionMatrix();
-            light.valueIteration(0.01);
+            light.valueIteration(0.005);
             light.printPolicy();
         }
     }
 
     public int countVehiclesApproaching(TrafficLight light) {
-        final double APPROACH_DISTANCE = 50.0; // constante pour la distance
-        Position lightPosition = getLightPosition(light.getId());
+        final double APPROACH_DISTANCE = 30.0; // constante pour la distance
+        Position lightPosition = getTrafficLightPosition(light);
 
         return (int) lanes.stream()
                 .flatMap(lane -> lane.getVehicles().stream())
@@ -161,39 +135,26 @@ public class Road {
                 .count();
     }
 
-    public Position getLightPosition(String lightId) {
-        // Méthode simplifiée - à adapter selon votre implémentation réelle
-        // Par défaut, retourne la position de fin de route
-        return entryPoints.get(entryPoints.size() - 1);
-    }
-    public Graph getGraph() {
-        return graph;
-    }
-    public List<Position> getEntryPoints() {
-        return entryPoints;
-    }
-
-
     public void updateTrafficLights() {
         tickCounter++;
 
-        // 1. Mettre à jour les niveaux de trafic pour chaque feu
+        //1)Mettre à jour les niveaux de trafic pour chaque feu
         for (TrafficLight light : trafficLights) {
             int vehicleCount = countVehiclesApproaching(light);
             light.updateTrafficLevel(vehicleCount);
         }
 
-        // 2. Appliquer les décisions MDP seulement tous les X ticks
+        //2)Appliquer les décisions MDP seulement tous les X ticks
         if (useMDP && tickCounter % mdpDecisionInterval == 0) {
             for (TrafficLight light : trafficLights) {
                 light.mdpUpdate();
             }
         }
 
-        // 3. Coordination possible entre les feux (si plusieurs)
+        //3)Coordination possible entre les feux (si plusieurs)
         coordinateTrafficLights();
 
-        // 4. Mise à jour d’état (permet les cycles ORANGE -> ROUGE, etc.)
+        //4)Mise à jour d’état (permet les cycles ORANGE -> ROUGE, etc.)
         for (TrafficLight light : trafficLights) {
             light.update();
         }
@@ -201,11 +162,11 @@ public class Road {
 
     public void updateTrafficConditions() {
         this.isCongested = checkCongestion();
-        // Mettre à jour les probabilités de transition basées sur le trafic global
+        //Mettre à jour les probabilités de transition basées sur le trafic global
         for (TrafficLight light : trafficLights) {
             int vehicleCount = countVehiclesApproaching(light);
             light.updateTrafficLevel(vehicleCount);
-            light.updatePolicy(); // Recalculer la politique
+            light.updatePolicy(); //recalcule de la politique
         }
     }
 
@@ -216,11 +177,11 @@ public class Road {
         List<Position> obstaclePositions = new ArrayList<>();
         for (Lane lane : lanes) {
             for (Obstacle obstacle : lane.getObstacles()) {
-                obstaclePositions.add(obstacle.getPosition());  // sans snap
+                obstaclePositions.add(obstacle.getPosition());
             }
         }
 
-        // Créer tous les nœuds possibles
+        //créer tous les noeuds possibles
         for (int x = 0; x <= this.length; x += segmentLength) {
             for (Lane lane : lanes) {
                 Position pos = new Position(x, lane.getCenterYInt());
@@ -229,9 +190,7 @@ public class Road {
                 }
             }
         }
-
-        // Connecter horizontalement
-        // Connecter horizontalement (sans traverser d'obstacles)
+        //connecter horizontalement
         for (int x = 0; x <= this.length - segmentLength; x += segmentLength) {
             for (Lane lane : lanes) {
                 Position from = new Position(x, lane.getCenterYInt());
@@ -242,13 +201,11 @@ public class Road {
                     for (Position obstaclePos : obstaclePositions) {
                         double obsX = obstaclePos.getX();
                         int obsY = obstaclePos.getY();
-                        // Est-ce que obstacle est entre from et to sur la même lane
                         if (obsY == from.getY() && obsX >= from.getX() - 1 && obsX <= to.getX() + 1) {
                             obstacleBetween = true;
                             break;
                         }
                     }
-
                     if (!obstacleBetween) {
                         graph.connect(from, to, segmentLength);
                     }
@@ -257,7 +214,7 @@ public class Road {
         }
 
 
-        // Connecter verticalement (changement de voie)
+        //connecter verticalement (changement de voie)
         for (int x = 0; x <= this.length; x += segmentLength) {
             for (int i = 0; i < lanes.size() - 1; i++) {
                 int y1 = lanes.get(i).getCenterYInt();
@@ -273,11 +230,16 @@ public class Road {
             }
         }
 
-        System.out.println("📌 Graphe généré automatiquement sans obstacles, " + graph.getAllNodes().size() + " nœuds.");
+        System.out.println("Graphe généré automatiquement sans obstacles, " + graph.getAllNodes().size() + " noeuds.");
     }
-
+    public Graph getGraph() {
+        return graph;
+    }
+    public List<Position> getEntryPoints() {
+        return entryPoints;
+    }
     public List<Lane> getLanes() {
-        return new ArrayList<>(lanes); // Returns a copy for encapsulation
+        return new ArrayList<>(lanes);
     }
     public Position getTrafficLightPosition(TrafficLight light) {
         int index = trafficLights.indexOf(light);
@@ -289,31 +251,26 @@ public class Road {
 
     public Lane getAdjacentLane(Lane currentLane, boolean toLeft) {
         List<Lane> allLanes = this.getLanes();
-
-        // Trier les lanes de haut en bas (Y décroissant) pour déterminer la gauche/droite
         allLanes.sort((l1, l2) -> Double.compare(l2.getCenterY(), l1.getCenterY()));
-
         int index = allLanes.indexOf(currentLane);
         if (index == -1) return null;
-
         int targetIndex = toLeft ? index - 1 : index + 1;
         if (targetIndex < 0 || targetIndex >= allLanes.size()) return null;
-
         Lane targetLane = allLanes.get(targetIndex);
-        // On ne change que si les directions sont compatibles
         if (targetLane.getDirection() == currentLane.getDirection()) {
             return targetLane;
         }
 
         return null;
     }
-
     public String getName() {
         return id;
     }
+    public void setCondition(RoadCondition condition) {
+        this.condition = condition;
+    }
 
-
-
-
-
+    public RoadCondition getCondition() {
+        return condition;
+    }
 }

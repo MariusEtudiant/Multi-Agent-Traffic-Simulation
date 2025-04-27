@@ -12,15 +12,12 @@ public class GraphNode {
     public GraphNode(Position position) {
         this.position = position;
     }
-
     public Position getPosition() {
         return position;
     }
-
     public Map<GraphNode, Double> getNeighbors() {
         return neighbors;
     }
-
     public void addNeighbor(GraphNode neighbor, double cost) {
         neighbors.put(neighbor, cost);
     }
@@ -31,7 +28,6 @@ public class GraphNode {
     public boolean hasObstacle() {
         return hasObstacle;
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -39,12 +35,8 @@ public class GraphNode {
         GraphNode that = (GraphNode) o;
         return Objects.equals(position, that.position);
     }
-
     @Override
     public int hashCode() {
         return position.hashCode();
     }
-
-
-
 }

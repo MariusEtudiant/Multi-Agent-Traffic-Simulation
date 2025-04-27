@@ -7,12 +7,11 @@ import java.util.Random;
 public class TransitionMatrix {
     private final Random random = new Random();
     final Map<String, Map<String, Double>> transitions;
-    private final double[][] trafficChangeMatrix; // Nouvelle matrice pour l'évolution du trafic
+    private final double[][] trafficChangeMatrix; //matrice pour l'évolution du trafic
 
     public TransitionMatrix() {
         this.transitions = new HashMap<>();
-        // Matrice de changement de trafic: P(next_traffic | current_traffic)
-        // Matrice plus progressive pour l'évolution du trafic
+        //matrice plus progressive pour l'évolution du trafic
         this.trafficChangeMatrix = new double[][]{
                 // NONE   MEDIUM  HEAVY
                 {0.5,    0.3,    0.2},   // Après NONE
@@ -20,9 +19,6 @@ public class TransitionMatrix {
                 {0.2,    0.4,    0.4}      // Après HEAVY
         };
         initializeRealisticTransitions();
-    }
-    public double[] getTrafficTransitionProbs(TrafficLight.TrafficLevel level) {
-        return trafficChangeMatrix[level.ordinal()];
     }
 
     private void initializeRealisticTransitions() {
@@ -48,7 +44,7 @@ public class TransitionMatrix {
                         stateTransitions.put("GREEN_" + currentLevel, 0.4);      // passe à vert
                     }
                 }
-                // 2. Transition de trafic plus progressive
+                // 2)Transition de trafic plus progressive
                 for (String nextLevel : levels) {
                     int nextLevelIdx = TrafficLight.TrafficLevel.valueOf(nextLevel).ordinal();
                     double trafficProb = trafficChangeMatrix[currentLevelIdx][nextLevelIdx];
@@ -66,25 +62,6 @@ public class TransitionMatrix {
         return normalized;
     }
 
-    public double getProbability(String currentState, String nextState) {
-        return transitions.getOrDefault(currentState, new HashMap<>())
-                .getOrDefault(nextState, 0.0);
-    }
-
-    public String getNextState(String currentState, String action) {
-        String[] parts = currentState.split("_");
-        TrafficLight.LightColor currentColor = TrafficLight.LightColor.valueOf(parts[0]);
-        TrafficLight.TrafficLevel currentLevel = TrafficLight.TrafficLevel.valueOf(parts[1]);
-
-        // 1. Déterminer la nouvelle couleur basée sur l'action
-        TrafficLight.LightColor newColor = applyAction(currentColor, action);
-
-        // 2. Déterminer le nouveau niveau de trafic (dépend du niveau actuel)
-        TrafficLight.TrafficLevel newLevel = getNextTrafficLevel(currentLevel);
-
-        return newColor + "_" + newLevel;
-    }
-
     private TrafficLight.LightColor applyAction(TrafficLight.LightColor current, String action) {
         switch (action) {
             case "SWITCH_GREEN": return TrafficLight.LightColor.GREEN;
@@ -94,6 +71,11 @@ public class TransitionMatrix {
         }
     }
 
+    public double getProbability(String currentState, String nextState) {
+        return transitions.getOrDefault(currentState, new HashMap<>())
+                .getOrDefault(nextState, 0.0);
+    }
+
     private TrafficLight.TrafficLevel getNextTrafficLevel(TrafficLight.TrafficLevel current) {
         double rand = random.nextDouble();
         double[] probs = trafficChangeMatrix[current.ordinal()];
@@ -101,5 +83,25 @@ public class TransitionMatrix {
         if (rand < probs[0]) return TrafficLight.TrafficLevel.NONE;
         if (rand < probs[0] + probs[1]) return TrafficLight.TrafficLevel.MEDIUM;
         return TrafficLight.TrafficLevel.HEAVY;
+    }
+
+    public double[] getTrafficTransitionProbs(TrafficLight.TrafficLevel level) {
+        return trafficChangeMatrix[level.ordinal()];
+    }
+
+    //pourra m'être utile:
+
+    public String getNextState(String currentState, String action) {
+        String[] parts = currentState.split("_");
+        TrafficLight.LightColor currentColor = TrafficLight.LightColor.valueOf(parts[0]);
+        TrafficLight.TrafficLevel currentLevel = TrafficLight.TrafficLevel.valueOf(parts[1]);
+
+        // 1) Déterminer la nouvelle couleur basée sur l'action
+        TrafficLight.LightColor newColor = applyAction(currentColor, action);
+
+        // 2)Déterminer le nouveau niveau de trafic (dépend du niveau actuel)
+        TrafficLight.TrafficLevel newLevel = getNextTrafficLevel(currentLevel);
+
+        return newColor + "_" + newLevel;
     }
 }

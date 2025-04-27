@@ -5,6 +5,5 @@ As seen in class, it's not the most aesthetic treatment, but to treat 5 actions 
 package org.example.agent;
 
 public enum Intention {
-    ACCELERATE, TURN_LEFT, SLOW_DOWN,STOP, TURN_RIGHT, CHANGE_LANE, WAIT, FOLLOW_PATH
-    ;
+    ACCELERATE, TURN_LEFT, SLOW_DOWN,STOP, TURN_RIGHT, CHANGE_LANE, WAIT, FOLLOW_PATH;
 }

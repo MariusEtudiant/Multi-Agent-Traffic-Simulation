@@ -359,10 +359,6 @@ public class Vehicle {
         System.out.println("🎯 Intentions finales V" + id + " = " + intentions);
     }
 
-
-
-
-
     public void act() {
         // Chercher le prochain target du chemin
 

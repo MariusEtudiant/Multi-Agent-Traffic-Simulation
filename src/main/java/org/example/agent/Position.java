@@ -24,13 +24,11 @@ public class Position {
         return new Position(snappedX, snappedY);
     }
 
-
     // get
     public int getX() { return x; }
     public int getY() { return y; }
 
     //formats
-
     @Override
     public String toString() {
         return String.format("(%d, %d)", x, y);

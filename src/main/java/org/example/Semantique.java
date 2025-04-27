@@ -21,12 +21,12 @@ public class Semantique {
 
 
     public static void runScenario4() {
-        System.out.println("\n=== SCÉNARIO 4 : Choix du mode de transport via argumentation ===");
+        System.out.println("\n=== SCÉNARIO: Choix du mode de transport via argumentation ===");
 
-        /* --------- 1. Contexte aléatoire --------- */
+        /*Contexte aléatoire*/
         Random rand = new Random();
-        int startX = rand.nextInt(20);           // 0 – 19
-        int destX = 50 + rand.nextInt(60);      // 50 – 109
+        int startX = rand.nextInt(20);
+        int destX = 50 + rand.nextInt(60);
         Position startPos = new Position(startX, 0);
         Position destPos = new Position(destX, 0);
         double dist = startPos.distanceTo(destPos);
@@ -38,15 +38,15 @@ public class Semantique {
 
 
         System.out.printf(
-                "Contexte : Distance ≈ %.1f unités | Météo = %s | Santé = %s | Heure de pointe = %s%n",
+                "Contexte: Distance ≈ %.1f unités | Météo = %s | Santé = %s | Heure de pointe = %s%n",
                 dist, weather, isHealthy ? "OK" : "Faible", isRushHour ? "Oui" : "Non"
         );
 
-        /* --------- 2. Construction de l’agent --------- */
+        /*2) Construction de l’agent*/
         TransportationAgent agent =
                 new TransportationAgent(startPos, destPos, weather, isHealthy, isRushHour);
 
-        /* --------- 3. Décision et probabilités --------- */
+        /*3) Décision et probabilités*/
         String decision = agent.decideTransportationModeWithoutSCR();
 
         //Map<String, Double> probs = agent.getModeProbabilities();
@@ -58,15 +58,15 @@ public class Semantique {
 
         System.out.println("\n Décision de l’agent → " + decision);
 
-        /* --------- 4. Arguments acceptés (Grounded) ----- */
-        DungTheory theory = agent.buildFramework();                // wrapper public → buildFramework()
+        /*Arguments acceptés (Grounded) */
+        DungTheory theory = agent.buildFramework();
         Extension accepted = new SimpleGroundedReasoner()
                 .getModel(theory);
 
         System.out.println("\n Arguments acceptés (Grounded) :");
         accepted.forEach(a -> System.out.println("  - " + a.toString()));
 
-        /* --------- 5. Affichage + export du graphe ------- */
+        /*5) Affichage + export du graphe*/
         DungGraphPanel panel = new DungGraphPanel(theory, accepted);
 
         SwingUtilities.invokeLater(() -> {
@@ -80,8 +80,8 @@ public class Semantique {
             DungGraphPanel.GraphExporter.exportPanelAsPNG(panel, "graph_export.png");
         });
 
-        /* --------- 6. Comparaison rapide des sémantiques - */
-        System.out.println("\n🔍 Comparaison des sémantiques :");
+        /*6)Comparaison rapide des sémantiques  */
+        System.out.println("\n Comparaison des sémantiques :");
         agent.compareSemantics().forEach(
                 (name, ext) -> System.out.printf("  - %-9s : %s%n", name, ext)
         );
@@ -108,12 +108,12 @@ public class Semantique {
             boolean isRush = rand.nextBoolean();
 
             TransportationAgent agent = new TransportationAgent(startPos, destPos, weather, isHealthy, isRush);
-            String decision = agent.decideTransportationMode();  // utilise getModeScoresScr()
+            String decision = agent.decideTransportationMode();  // utilise getModeScoresScr
 
             counts.put(decision, counts.getOrDefault(decision, 0) + 1);
         }
 
-        System.out.println("\n📊 Répartition après 100 décisions (SCR-based):");
+        System.out.println("\nRépartition après 100 décisions (SCR-based):");
         counts.forEach((mode, count) -> {
             double percent = (count / 100.0) * 100;
             System.out.printf("• %-17s : %3d (%.1f%%)%n", mode, count, percent);
@@ -121,15 +121,15 @@ public class Semantique {
     }
 
     public static void runMultipleScenarios() {
-        System.out.println("\n=== TEST DE MULTIPLES SCÉNARIOS (Génération Graphique) ===");
+        System.out.println("\nTEST DE MULTIPLES SCÉNARIOS (Génération Graphique)");
 
         List<String> weathers = List.of("Sunny", "Rainy", "Cloudy");
         Random rand = new Random();
 
-        for (int i = 1; i <= 5; i++) {   // Génère 5 contextes différents
+        for (int i = 1; i <= 5; i++) {   // génère 5 contextes différents
             System.out.println("\n--- SCÉNARIO " + i + " ---");
 
-            // Contexte aléatoire
+            //contexte aléatoire
             int startX = rand.nextInt(20);
             int destX = 50 + rand.nextInt(60);
             Position startPos = new Position(startX, 0);
@@ -140,18 +140,18 @@ public class Semantique {
 
             TransportationAgent agent = new TransportationAgent(startPos, destPos, weather, isHealthy, isRushHour);
 
-            // Décision sans SCR
+            //décision sans SCR
             String decision = agent.decideTransportationModeWithoutSCR();
             System.out.println("Décision : " + decision);
 
-            // Graphe et extension acceptée
+            //graphe et extension acceptée
             DungTheory theory = agent.getFramework();
             Extension accepted = new SimpleGroundedReasoner().getModel(theory);
 
-            // Création panneau et export
+            //création panneau et export
             DungGraphPanel panel = new DungGraphPanel(theory, accepted);
 
-            int idx = i;  // copie pour usage dans Swing
+            int idx = i;  //copie pour Swing
             SwingUtilities.invokeLater(() -> {
                 JFrame frame = new JFrame("Scenario " + idx);
                 frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -165,5 +165,4 @@ public class Semantique {
             });
         }
     }
-
 }

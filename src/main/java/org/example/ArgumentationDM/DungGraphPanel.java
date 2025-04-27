@@ -1,15 +1,15 @@
 
 /*
  * DungGraphPanel.java
- * -------------------
  * Panneau Swing pour visualiser le graphe d'argumentation avec légende.
  */
 package org.example.ArgumentationDM;
 
-import org.tweetyproject.arg.dung.semantics.Extension;
+//tweety
 import org.tweetyproject.arg.dung.syntax.Argument;
 import org.tweetyproject.arg.dung.syntax.DungTheory;
 
+//swing
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -23,7 +23,7 @@ public class DungGraphPanel extends JPanel {
     private final DungTheory theory;
     private final Set<Argument> accepted;
 
-    // Mapping argument → mode pour la couleur
+    // Mapping argument => mode pour la couleur
     private static final Map<String,String> MODE_MAP = Map.ofEntries(
             Map.entry("A13","CAR"), Map.entry("A16","CAR"), Map.entry("A17","CAR"), Map.entry("A18","CAR"),
             Map.entry("A3","PUBLIC_TRANSPORT"), Map.entry("A10","PUBLIC_TRANSPORT"),
@@ -35,7 +35,6 @@ public class DungGraphPanel extends JPanel {
             Map.entry("A37", "BIKE"),Map.entry("A35", "Santé vélo-"),
             Map.entry("A36", "Danger pluie vélo"),
             Map.entry("A50", "Long trajet marche")
-
             );
 
     // Labels lisibles pour chaque argument
@@ -56,11 +55,9 @@ public class DungGraphPanel extends JPanel {
             Map.entry("A31","Lignes rares"), Map.entry("A40","Inconfort"),
             Map.entry("A33", "Fatigue santé"),
             Map.entry("A41", "Réseau saturé"),Map.entry("A37", "BIKE"),
-            Map.entry("A35", "BIKE"),   // Effort vélo avec santé fragile
-            Map.entry("A36", "BIKE"),   // Danger vélo pluie
-            Map.entry("A50", "WALK")   // Trop longue marche
-
-
+            Map.entry("A35", "BIKE"),
+            Map.entry("A36", "BIKE"),
+            Map.entry("A50", "WALK")
     );
 
     public DungGraphPanel(DungTheory theory, Collection<Argument> accepted) {
@@ -87,12 +84,12 @@ public class DungGraphPanel extends JPanel {
             int y = cy + (int)(cr*Math.sin(ang));
             pos.put(args.get(i), new Point(x,y));
         }
-        // Attaques
+        //attaques
         g2.setStroke(new BasicStroke(2));
         for (Argument a: args) for (Argument b: theory.getAttacked(a)) {
             drawArrow(g2, pos.get(a), pos.get(b));
         }
-        // Noeuds
+        //noeuds
         for (Argument a: args) {
             Point p = pos.get(a);
             String nm = a.getName();
@@ -115,7 +112,6 @@ public class DungGraphPanel extends JPanel {
         }
         drawLegend(g2);
     }
-
     private void drawArrow(Graphics2D g2, Point from, Point to) {
         double dx=to.x-from.x, dy=to.y-from.y;
         double ang=Math.atan2(dy,dx);
@@ -128,7 +124,6 @@ public class DungGraphPanel extends JPanel {
         g2.fill(head);
         g2.setTransform(old);
     }
-
     private void drawLegend(Graphics2D g2) {
         int x=getWidth()-200, y=getHeight()-180;
         g2.setColor(Color.BLACK);
@@ -148,10 +143,7 @@ public class DungGraphPanel extends JPanel {
             y+=20;
         }
     }
-
-    /**
-     * Exporte le panneau en PNG.
-     */
+     //Exporte en PNG
     public static class GraphExporter {
         public static void exportPanelAsPNG(JPanel panel, String filename) {
             BufferedImage img = new BufferedImage(

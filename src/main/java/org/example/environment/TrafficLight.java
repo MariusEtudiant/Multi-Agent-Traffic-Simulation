@@ -22,21 +22,20 @@ public class TrafficLight {
     private int stepCount = 0;
 
     private TrafficLevel currentTraffic;
-    private Map<String, String> policy; // Learned policy
-    private double[][] valueFunction; // State values
-    private boolean useMDP = true; // ✅ Par défaut on utilise le MDP
+    private Map<String, String> policy; //learned policy
+    private double[][] valueFunction;
+    private boolean useMDP = true; //par défaut on utilise le MDP
 
 
-    // Q-learning parameters
+    // Q-learning
     private Map<String, Map<String, Double>> qTable;
-    private double alpha = 0.5; // Learning rate
-    private double gamma = 0.9; // Discount factor
-    private double epsilon = 0.3;// Exploration rate
+    private double alpha = 0.5; // learning rate
+    private double gamma = 0.9; //discount factor
+    private double epsilon = 0.3;//exploration rate
 
 
     private final TransitionMatrix transitionMatrix = new TransitionMatrix();
     private Position position;
-
 
 
     public TrafficLight(String id, LightColor state) {
@@ -70,15 +69,15 @@ public class TrafficLight {
         switch (currentColor) {
             case GREEN -> {
                 actions.add("STAY_GREEN");
-                actions.add("SWITCH_ORANGE"); // seul switch autorisé
+                actions.add("SWITCH_ORANGE");
             }
             case ORANGE -> {
                 actions.add("STAY_ORANGE");
-                actions.add("SWITCH_RED"); // seul switch autorisé
+                actions.add("SWITCH_RED");
             }
             case RED -> {
                 actions.add("STAY_RED");
-                actions.add("SWITCH_GREEN"); // seul switch autorisé
+                actions.add("SWITCH_GREEN");
             }
         }
         return actions;
@@ -206,10 +205,6 @@ public class TrafficLight {
         extractPolicy();
     }
 
-    private double[] getTrafficTransitionProbs(TrafficLevel currentLevel) {
-        return transitionMatrix.getTrafficTransitionProbs(currentLevel);
-    }
-
 
     private LightColor applyAction(LightColor current, String action) {
         switch (action) {
@@ -220,18 +215,14 @@ public class TrafficLight {
         }
     }
 
-
-
     private double calculateActionValue(LightColor color, TrafficLevel level, String action, double gamma) {
         double total = 0.0;
 
-        // 1. Couleur suivante déterminée par l'action
+        //1) Couleur suivante déterminée par l'action
         LightColor nextColor = applyAction(color, action);
-
-        // 2. Probabilités d'évolution du trafic (indépendantes de l'action)
+        //2) Probabilités d'évolution du trafic (indépendantes de l'action)
         double[] trafficProbs = getTrafficTransitionProbs(level);
-
-        // 3. Boucle sur les niveaux de trafic possibles
+        //3) Boucle sur les niveaux de trafic possibles
         for (int i = 0; i < trafficProbs.length; i++) {
             TrafficLevel nextLevel = TrafficLevel.values()[i];
             double probability = trafficProbs[i];
@@ -241,19 +232,17 @@ public class TrafficLight {
 
             total += probability * (reward + gamma * futureValue);
         }
-
         return total;
     }
     private double getActionPenalty(String action) {
-        // Récompense neutre ou bonus pour rester stable, pénalité pour changer
+        //récompense neutre ou bonus pour rester stable, pénalité pour changer
         if (action.startsWith("STAY_")) return 0.5;
-        return -2.0; // Pénalité pour éviter les changements trop fréquents
+        return -2.0; //pénalité pour éviter les changements trop fréquents
     }
-
 
     private void extractPolicy() {
         policy = new HashMap<>();
-        double gammaLocal = 0.8; // même valeur que dans valueIteration
+        double gammaLocal = 0.8; //même valeur que dans valueIteration
 
         for (LightColor color : LightColor.values()) {
             for (TrafficLevel level : TrafficLevel.values()) {
@@ -274,28 +263,6 @@ public class TrafficLight {
             }
         }
     }
-
-
-    public void exportPolicyToCSV(String filePath) {
-        try (PrintWriter writer = new PrintWriter(filePath)) {
-            writer.println("TrafficLevel,GREEN,ORANGE,RED");
-
-            for (TrafficLevel level : TrafficLevel.values()) {
-                StringBuilder line = new StringBuilder(level.name());
-                for (LightColor color : LightColor.values()) {
-                    String state = getStateKey(color, level);
-                    String action = policy.getOrDefault(state, "AUCUNE");
-                    line.append(",").append(action);
-                }
-                writer.println(line);
-            }
-
-            System.out.println("✅ Politique exportée vers : " + filePath);
-        } catch (Exception e) {
-            System.out.println("❌ Erreur d'export : " + e.getMessage());
-        }
-    }
-
 
     public void printTransitionMatrix() {
         System.out.println("Matrice de Transition Complète:");
@@ -339,78 +306,41 @@ public class TrafficLight {
     }
 
     public void updatePolicy() {
-        this.valueIteration(0.001); // Recalculer avec la nouvelle matrice
+        this.valueIteration(0.005); //recalculer avec la nouvelle matrice
         this.extractPolicy();
     }
 
-
-    // fonctions de bases
-    public String getCurrentState() {
-        return getStateKey(state, currentTraffic);
-    }
-    public Map<String, String> getPolicy() {
-        return policy;
-    }
-
-    public TrafficLevel getCurrentTraffic() {
-        return currentTraffic;
-    }
-
-    public LightColor getState(){
-        return state;
-    }
     public void setState(LightColor state) {
         this.state = state;
     }
-    public String getId() {
-        return id;
+    public void setUseMDP(boolean useMDP) {
+        this.useMDP = useMDP;
     }
 
     public void update() {
         stepCount++;
         if (stepCount % changeInterval == 0) {
             if (!useMDP) {
-                toggleState();  // 🚦 Cyclique seulement en mode manuel
+                toggleState();  //cyclique seulement en mode manuel
             }
             stepCount = 0;
         }
     }
-
-    public void setUseMDP(boolean useMDP) {
-        this.useMDP = useMDP;
-    }
-
     public boolean isUseMDP() {
         return useMDP;
     }
 
     public void toggleState() {
         if (useMDP) {
-            // ✅ Ne rien faire : c’est le MDP qui contrôle
+            //ne rien faire : c’est le MDP qui contrôle
             return;
         }
-
-        // 🔁 Sinon, comportement par défaut
+        //sinon, comportement par défaut
         switch (state) {
             case GREEN -> state = LightColor.ORANGE;
             case ORANGE -> state = LightColor.RED;
             case RED -> state = LightColor.GREEN;
         }
-    }
-
-    public Map<String, Double> getValueFunctionAsMap() {
-        Map<String, Double> map = new LinkedHashMap<>();
-        for (LightColor color : LightColor.values()) {
-            for (TrafficLevel level : TrafficLevel.values()) {
-                String key = color.name() + "_" + level.name();
-                double value = valueFunction[color.ordinal()][level.ordinal()];
-                map.put(key, value);
-            }
-        }
-        return map;
-    }
-    public Position getPosition() {
-        return position;
     }
 
     public void setPosition(Position position) {
@@ -436,6 +366,19 @@ public class TrafficLight {
         }
     }
 
+    //gets
+    public Map<String, Double> getValueFunctionAsMap() {
+        Map<String, Double> map = new LinkedHashMap<>();
+        for (LightColor color : LightColor.values()) {
+            for (TrafficLevel level : TrafficLevel.values()) {
+                String key = color.name() + "_" + level.name();
+                double value = valueFunction[color.ordinal()][level.ordinal()];
+                map.put(key, value);
+            }
+        }
+        return map;
+    }
+
     public Map<String, Double> getQTableMaxValuesAsMap() {
         Map<String, Double> map = new LinkedHashMap<>();
         if (qTable == null) return map;
@@ -447,8 +390,49 @@ public class TrafficLight {
         return map;
     }
 
+    private double[] getTrafficTransitionProbs(TrafficLevel currentLevel) {
+        return transitionMatrix.getTrafficTransitionProbs(currentLevel);
+    }
+
+    public Position getPosition() {
+        return position;
+    }
+    public LightColor getState(){
+        return state;
+    }
+    public String getId() {
+        return id;
+    }
+    public TrafficLevel getCurrentTraffic() {
+        return currentTraffic;
+    }
 
 
+    //pourra être utile:
+    public void exportPolicyToCSV(String filePath) {
+        try (PrintWriter writer = new PrintWriter(filePath)) {
+            writer.println("TrafficLevel,GREEN,ORANGE,RED");
 
+            for (TrafficLevel level : TrafficLevel.values()) {
+                StringBuilder line = new StringBuilder(level.name());
+                for (LightColor color : LightColor.values()) {
+                    String state = getStateKey(color, level);
+                    String action = policy.getOrDefault(state, "AUCUNE");
+                    line.append(",").append(action);
+                }
+                writer.println(line);
+            }
+
+            System.out.println("Politique exportée vers : " + filePath);
+        } catch (Exception e) {
+            System.out.println("Erreur d'export : " + e.getMessage());
+        }
+    }
+    public String getCurrentState() {
+        return getStateKey(state, currentTraffic);
+    }
+    public Map<String, String> getPolicy() {
+        return policy;
+    }
 
 }
