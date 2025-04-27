@@ -632,7 +632,7 @@ public class TrafficSimulatorApp extends Application {
         lane1Series.getData().clear();
         lane2Series.getData().clear();
 
-        System.out.println("\n🔄 Simulation réinitialisée !");
+        System.out.println("\nSimulation réinitialisée !");
         drawInitial(); // Redessiner tout propre
     }
 
