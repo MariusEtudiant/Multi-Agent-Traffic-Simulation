@@ -1,43 +1,28 @@
-Multi-Agent Traffic Simulation with BDI Agents
-Project Overview
-A Java-based traffic simulator where autonomous vehicles (BDI agents) navigate urban environments using logical reasoning. Agents make decisions based on perceptions of traffic lights, obstacles, and other vehicles.
+# Simulateur de Trafic Autonome
 
+## Présentation
 
-Key Features
-BDI Architecture:
+Simulation d'un trafic urbain avec :
+- Véhicules autonomes basés sur l'architecture BDI (Belief-Desire-Intention).
+- Raisonnement logique avec l'Interpreter Pattern.
+- Feux de circulation adaptatifs via MDP (Q-Learning / Value Iteration).
+- Interface graphique en JavaFX.
 
-Beliefs: Environmental perceptions (traffic lights, obstacles)
+## Fonctionnalités
 
-Desires: Goals (reach destination, avoid collisions)
+- Agents BDI naviguant sur route.
+- Feux apprenant à réagir au trafic.
+- Obstacles aléatoires et gestion de congestion.
+- Visualisation temps réel du trafic et des décisions.
 
-Intentions: Actions (accelerate, turn, stop)
+## Lancer le projet
 
-Logical Reasoning: Interpreter Pattern for evaluating traffic conditions
+1. Java 17+ requis.
+2. Lancer run.bat ou run.sh suivant le système.
+3. Interagir avec l'interface : tester !
 
-Implementation
-Core BDI components: Vehicle, BeliefInitial, Desire, Intention
+## Structure rapide
 
-Logical formulas: AndFormula, NotFormula, AtomFormula
+Projet universitaire mêlant IA, planification et apprentissage;
 
-Environment: Lane, Road, TrafficLight classes
-
-How to Run
-Clone repository https://github.com/MariusEtudiant/Multi-Agent-Traffic-Simulation.git
-
-Copy
-exucute the main file main.java which contain all implémentation of the scenario, change as you want to test it 
-
-Scenarios Tested
-Free-flow traffic
-
-Congested traffic
-
-Results Analysis
-Travel time efficiency
-
-Collision avoidance rate
-
-Lane change average
-
-Report
-Includes full system design, UML diagrams, code explanation, and experimental results.
+Marius Casamian cm22205773 L3 IA 2024-2025
