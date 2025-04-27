@@ -31,7 +31,7 @@ public class TrafficLight {
     private Map<String, Map<String, Double>> qTable;
     private double alpha = 0.5; // Learning rate
     private double gamma = 0.9; // Discount factor
-    private double epsilon = 0.05;// Exploration rate
+    private double epsilon = 0.3;// Exploration rate
 
 
     private final TransitionMatrix transitionMatrix = new TransitionMatrix();
@@ -416,6 +416,39 @@ public class TrafficLight {
     public void setPosition(Position position) {
         this.position = position;
     }
+
+    public void resetLearning() {
+        if (qTable != null) {
+            for (String key : qTable.keySet()) {
+                Map<String, Double> actionValues = qTable.get(key);
+                for (String action : actionValues.keySet()) {
+                    actionValues.put(action, 0.0);
+                }
+            }
+        }
+
+        if (valueFunction != null) {
+            for (int i = 0; i < valueFunction.length; i++) {
+                for (int j = 0; j < valueFunction[i].length; j++) {
+                    valueFunction[i][j] = 0.0;
+                }
+            }
+        }
+    }
+
+    public Map<String, Double> getQTableMaxValuesAsMap() {
+        Map<String, Double> map = new LinkedHashMap<>();
+        if (qTable == null) return map;
+
+        for (String state : qTable.keySet()) {
+            double maxQ = qTable.get(state).values().stream().max(Double::compareTo).orElse(0.0);
+            map.put(state, maxQ);
+        }
+        return map;
+    }
+
+
+
 
 
 }

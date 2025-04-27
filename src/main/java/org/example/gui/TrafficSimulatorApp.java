@@ -19,6 +19,7 @@ import org.example.agent.Intention;
 import org.example.agent.Position;
 import org.example.agent.Vehicle;
 import org.example.environment.*;
+import org.example.planning.Graph;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -33,6 +34,13 @@ public class TrafficSimulatorApp extends Application {
     private static final int WIDTH = 1200;
     private static final int HEIGHT = 800;
 
+    private enum LearningMode {
+        Q_LEARNING,
+        VALUE_ITERATION
+    }
+
+    private LearningMode learningMode = LearningMode.Q_LEARNING; // Par défaut
+
     private Canvas canvas;
     private GraphicsContext gc;
     private ComboBox<String> scenarioSelector;
@@ -41,7 +49,7 @@ public class TrafficSimulatorApp extends Application {
     private long lastSpawnTimeLane1 = 0;
     private long lastSpawnTimeLane2 = 0;
     private static final long SPAWN_COOLDOWN_MS = 5000; // 6 secondes
-    boolean laneToggle = false;
+
 
     private Environment environment;
     private List<Vehicle> vehicles;
@@ -136,7 +144,21 @@ public class TrafficSimulatorApp extends Application {
         );
         scenarioSelector.setValue("Scénario 1: Routes avec deux voies, un feu et des obstacles");
 
-        controlPanel.getChildren().addAll(new Label("Choix du scénario:"), scenarioSelector, startBtn, showChartBtn, mdpToggleBtn, showRewardChartBtn, togglePathBtn);
+
+
+        ComboBox<String> learningModeSelector = new ComboBox<>();
+        learningModeSelector.getItems().addAll("Q-Learning", "Value Iteration");
+        learningModeSelector.setValue("Q-Learning");
+        learningModeSelector.setOnAction(e -> {
+            if (learningModeSelector.getValue().equals("Q-Learning")) {
+                learningMode = LearningMode.Q_LEARNING;
+            } else {
+                learningMode = LearningMode.VALUE_ITERATION;
+            }
+        });
+
+
+        controlPanel.getChildren().addAll(new Label("Choix du scénario:"), scenarioSelector, learningModeSelector,startBtn, showChartBtn, mdpToggleBtn, showRewardChartBtn, togglePathBtn);
         return controlPanel;
     }
 
@@ -167,11 +189,22 @@ public class TrafficSimulatorApp extends Application {
 
         trafficLight = new TrafficLight("R1", GREEN);
         road.addTrafficLight(trafficLight, new Position(70, 1));
-        road.trainTrafficLights();
-        road.enableMDP(true);
-        road.setMDPDecisionInterval(5);
 
-        Vehicle v1 = new Vehicle(new Position(15, 1), new Position(100, -1), environment);
+        if (learningMode == LearningMode.Q_LEARNING) {
+            for (TrafficLight light : road.getTrafficLights()) {
+                light.setUseMDP(true);
+                light.resetLearning();
+            }
+            road.setMDPDecisionInterval(2); // Petites décisions fréquentes
+        } else if (learningMode == LearningMode.VALUE_ITERATION) {
+            road.trainTrafficLights(); // Lance directement Value Iteration
+            road.enableMDP(true);
+            road.setMDPDecisionInterval(5); // Décision moins fréquente
+        }
+
+
+
+        Vehicle v1 = new Vehicle(new Position(25, 1), new Position(100, -1), environment);
         Vehicle v2 = new Vehicle(new Position(35, 1), new Position(100, -1), environment);
         lane1.addVehicle(v1);
         lane1.addVehicle(v2);
@@ -188,7 +221,7 @@ public class TrafficSimulatorApp extends Application {
         v4.setPathColor(Color.PURPLE);
         // Ajouter les obstacles
         Obstacle obs1 = new Obstacle(new Position(50, 1));     // Sur la lane du haut
-        Obstacle obs2 = new Obstacle(new Position(20, -1));    // Sur la lane du bas
+        Obstacle obs2 = new Obstacle(new Position(25, -1));    // Sur la lane du bas
         Obstacle obs4 = new Obstacle(new Position(35, -1));
 
         lane1.addObstacle(obs1);
@@ -229,8 +262,15 @@ public class TrafficSimulatorApp extends Application {
         gc.setFill(lightColor);
         gc.fillOval(70 * 7 + 100, 232, 20, 20); // Feu à x=70 logique
 
-        gc.setFill(Color.BLUE);
+
         for (Vehicle v : vehicles) {
+            Color color = switch (v.getMode()) {
+                case CAR -> Color.DODGERBLUE;
+                case BIKE -> Color.ORANGE;
+                case PUBLIC_TRANSPORT -> Color.PURPLE;
+                case WALK -> Color.LIGHTGREEN;
+            };
+            gc.setFill(color);
             int x = (int) (v.getPreciseX() * 7 + 100);
             int y = (v.getPosition().getY() == 1) ? 232 : 252;
 
@@ -325,6 +365,7 @@ public class TrafficSimulatorApp extends Application {
 
                     road.updateTrafficLights();
                     feuStates.add(trafficLight.getState());
+
 
                     for (Vehicle v : new ArrayList<>(lane1.getVehicles())) {
                         v.bdiCycle(lane1, road);
@@ -434,8 +475,13 @@ public class TrafficSimulatorApp extends Application {
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         series.setName("Valeurs");
 
-        // ✅ Accès dynamique depuis le feu de circulation
-        Map<String, Double> stateRewards = trafficLight.getValueFunctionAsMap();
+        Map<String, Double> stateRewards;
+        if (learningMode == LearningMode.VALUE_ITERATION) {
+            stateRewards = trafficLight.getValueFunctionAsMap();
+        } else {
+            stateRewards = trafficLight.getQTableMaxValuesAsMap();
+        }
+
         for (Map.Entry<String, Double> entry : stateRewards.entrySet()) {
             series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
         }
@@ -498,18 +544,30 @@ public class TrafficSimulatorApp extends Application {
     }
 
     private boolean canSpawnVehicleAtStart(Lane lane) {
-        // Vérifie qu'aucun véhicule n'est trop proche dans la lane actuelle
         for (Vehicle v : lane.getVehicles()) {
-            if (v.getPreciseX() < 15) {
+            double distance = v.getPreciseX();
+            double minDistance;
+
+            switch (v.getMode()) {
+                case CAR -> minDistance = 25.0;
+                case PUBLIC_TRANSPORT -> minDistance = 20.0;
+                case BIKE -> minDistance = 15.0;
+                case WALK -> minDistance = 20.0; // 💡 Pour piéton : on interdit spawn si véhicule trop proche
+                default -> minDistance = 20.0;
+            }
+
+            if (distance < minDistance) {
                 return false;
             }
         }
 
-        // Et aussi vérifier l'autre voie
-        Lane otherLane = (lane == lane1) ? lane2 : lane1;
-        for (Vehicle v : otherLane.getVehicles()) {
-            if (v.getPreciseX() < 5) { // Plus strict sur l'autre voie
-                return false;
+        // 🔥 Ajout spécial : si un WALK existe sur cette lane et est lent -> attention
+        for (Vehicle v : lane.getVehicles()) {
+            if (v.getMode() == Vehicle.TransportationMode.WALK) {
+                if (v.getPreciseX() > 0 && v.getPreciseX() < 30) { // Si un WALK est encore dans les 30m
+                    System.out.println("🚶 Piéton détecté à " + v.getPreciseX() + "m : pas de spawn !");
+                    return false;
+                }
             }
         }
 
@@ -517,27 +575,36 @@ public class TrafficSimulatorApp extends Application {
     }
 
 
+
+
     private Vehicle createRandomVehicle(Lane lane) {
-        Position spawnPosition = new Position(0, lane.getCenterYInt());
+        for (int tries = 0; tries < 5; tries++) { // on tente 5 fois maximum pour trouver un spawn valide
+            Position spawnPosition = new Position(0, lane.getCenterYInt());
 
-        // --- Destination aléatoire ---
-        int randomDestX = 80 + (int)(Math.random() * (100 - 80 - 5));
-        int destLaneY = Math.random() < 0.5 ? lane.getCenterYInt() : (lane == lane1 ? lane2.getCenterYInt() : lane1.getCenterYInt());
-        Position destination = new Position(randomDestX, destLaneY);
+            int randomDestX = 20 + (int)(Math.random() * 60);
+            randomDestX = Math.round(randomDestX / 10.0f) * 10; // ✨ SNAP sur 10m !
 
-        Vehicle vehicle = new Vehicle(spawnPosition, destination, environment);
+            int destLaneY = Math.random() < 0.5 ? lane.getCenterYInt() : (lane == lane1 ? lane2.getCenterYInt() : lane1.getCenterYInt());
+            Position destination = new Position(randomDestX, destLaneY);
 
-        // --- Couleur random ---
-        vehicle.setPathColor(Color.color(Math.random(), Math.random(), Math.random()));
+            Graph globalGraph = environment.getGlobalGraph();
+            if (globalGraph == null) {
+                System.out.println("❌ GlobalGraph est null !");
+                return null;
+            }
 
-        // --- Apparition douce (baisse d'opacité au début -> géré dans drawFrame() plus bas)
-        vehicle.setPreciseX(-5.0); // Commence légèrement en arrière pour effet visuel progressif
+            // 🔥 Vérifier si start et goal existent
+            if (globalGraph.getNode(spawnPosition) != null && globalGraph.getNode(destination) != null) {
+                Vehicle vehicle = new Vehicle(spawnPosition, destination, environment);
+                vehicle.setPathColor(Color.color(Math.random(), Math.random(), Math.random()));
+                vehicle.setPreciseX(-5.0);
+                return vehicle;
+            }
+        }
 
-        return vehicle;
+        System.out.println("🚫 Impossible de trouver un spawn valide après 5 essais !");
+        return null;
     }
-
-
-
 
 
 

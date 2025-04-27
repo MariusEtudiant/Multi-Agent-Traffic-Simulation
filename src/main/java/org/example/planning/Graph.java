@@ -32,4 +32,5 @@ public class Graph {
     public Collection<GraphNode> getAllNodes() {
         return nodes.values();
     }
+
 }

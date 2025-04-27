@@ -1,6 +1,7 @@
 package org.example.agent;
 
 import javafx.scene.paint.Color;
+import org.example.ArgumentationDM.TransportationAgent;
 import org.example.environment.*;
 import org.example.logic.*;
 import org.example.planning.DijkstraAlgorithm;
@@ -22,7 +23,6 @@ public class Vehicle {
     // === State Fields ===
     private static int nextId = 1;
     private final int id;
-    private TransportationMode mode = TransportationMode.CAR;
     private double speedFactor = 1.0;
 
     private Position position;
@@ -40,12 +40,13 @@ public class Vehicle {
     private List<Goal> goals;
     private Queue<Intention> intentions;
     private List<Intention> executedIntentions = new ArrayList<>();
-    private static final double EARLY_SLOWDOWN_DISTANCE = 15.0; // mètres
+    private static final double EARLY_SLOWDOWN_DISTANCE = 25.0; // mètres
 
 
     private List<Position> path = new ArrayList<>();
     private int nextWaypointIdx = 0;
-    private Position lastPlannedPosition = null;
+    private TransportationMode mode;
+
 
     private Environment environment;
     private boolean useGlobalGraph = true;
@@ -74,6 +75,22 @@ public class Vehicle {
         this.desires = new ArrayList<>();
         this.goals = new ArrayList<>();
         this.intentions = new LinkedList<>();
+
+        // === Ajout pour décider dynamiquement le mode ===
+        TransportationAgent agent = new TransportationAgent(position, destination, randomWeather(), randomHealth(), randomRushHour());
+        String decision = agent.decideTransportationModeWithoutSCR();
+
+        switch (decision) {
+            case "CAR" -> setMode(TransportationMode.CAR);
+            case "PUBLIC_TRANSPORT" -> setMode(TransportationMode.PUBLIC_TRANSPORT);
+            case "WALK" -> {
+                setMode(TransportationMode.WALK);
+                System.out.println("🚶 Il vaut mieux aller à pied !");
+            }
+            case "BIKE" -> setMode(TransportationMode.BIKE);
+            default -> setMode(TransportationMode.CAR);
+        }
+
 
         initializeGoals();
     }
@@ -119,10 +136,14 @@ public class Vehicle {
 
         double distanceToDest = position.distanceTo(destination);
         boolean arrived = distanceToDest < 5.0 && position.getY() == destination.getY();
+
+
         beliefs.addBelief(new Belief("AtDestination", arrived));
         beliefs.addBelief(new Belief("NearDestination", distanceToDest < 15.0));
         beliefs.addBelief(new Belief("HighSpeed", distanceToDest > 10 && lane.getVehicleSpeed(this) > 30.0));
         beliefs.addBelief(new Belief("CollisionRisk", beliefs.contains("CarAhead", true) && beliefs.contains("HighSpeed", true)));
+
+
 
         boolean obstacleAhead = lane.getObstacles().stream()
                 .anyMatch(obs -> obs.getPosition().getX() > position.getX() &&
@@ -267,12 +288,13 @@ public class Vehicle {
         if (vehicleAhead != null) {
             double distanceToCarAhead = vehicleAhead.getPreciseX() - this.preciseX;
 
-            if (distanceToCarAhead < EARLY_SLOWDOWN_DISTANCE) {
-                System.out.println("⚠️ Ralentir : Véhicule détecté à " + distanceToCarAhead + "m devant");
+            if (distanceToCarAhead > 0) {
                 if (distanceToCarAhead < 5) {
-                    tempIntentions.put(Intention.STOP, -5); // collision imminent
-                } else {
-                    tempIntentions.put(Intention.SLOW_DOWN, -3); // ralentir plus tôt
+                    tempIntentions.put(Intention.STOP, -10);  // ⛔ Stop immédiat
+                    System.out.println("🛑 V" + id + " détecte véhicule devant à " + distanceToCarAhead + "m : STOP !");
+                } else if (distanceToCarAhead < 10) {
+                    tempIntentions.put(Intention.SLOW_DOWN, -5); // 🐢 Ralentir fortement
+                    System.out.println("🐢 V" + id + " ralentit, véhicule détecté à " + distanceToCarAhead + "m");
                 }
             }
         }
@@ -392,31 +414,41 @@ public class Vehicle {
             case STOP -> {
                 boolean stillNeedsStop = false;
 
+                // Vérifie encore la présence du véhicule devant
                 Vehicle vehicleAhead = currentLane.getVehicleAhead(this);
                 if (vehicleAhead != null) {
                     double distanceToCarAhead = vehicleAhead.getPreciseX() - this.preciseX;
-                    if (distanceToCarAhead < computeDynamicBrakingDistance(currentLane)) {
+                    if (distanceToCarAhead > 0 && distanceToCarAhead < 5) {
                         stillNeedsStop = true;
                     }
                 }
 
-                if (beliefs.contains("FeuRouge", true) && distanceToLight > 0 && distanceToLight < brakingDistance) {
+                // Vérifie aussi s'il y a un feu rouge
+                if (beliefs.contains("FeuRouge", true) && getDistanceToNextLight() < computeDynamicBrakingDistance(currentLane)) {
                     stillNeedsStop = true;
                 }
 
                 if (stillNeedsStop) {
-                    System.out.println("🛑 V" + id + " reste arrêté pour sécurité");
-                    // Ne bouge pas ! Véhicule bloqué
+                    System.out.println("🛑 V" + id + " reste arrêté pour sécurité (danger toujours présent)");
+                    // ➔ Le véhicule ne bouge pas
                 } else {
-                    System.out.println("🟢 V" + id + " peut repartir, relance ACCELERATE");
+                    System.out.println("🟢 V" + id + " n'a plus d'obstacle, repart !");
                     intentions.clear();
-                    executeIntention(Intention.ACCELERATE, target);
+                    intentions.add(Intention.ACCELERATE);
                 }
             }
+
+
             case FOLLOW_PATH -> {
-                moveTowardsTarget(path.get(nextWaypointIdx), 1.0);
-                System.out.println("🛤️ V" + id + " suit son chemin Dijkstra...");
+                if (path != null && !path.isEmpty() && nextWaypointIdx < path.size()) {
+                    moveTowardsTarget(path.get(nextWaypointIdx), 1.0);
+                    System.out.println("🛤️ V" + id + " suit son chemin Dijkstra...");
+                } else {
+                    System.out.println("⚠️ V" + id + " a FOLLOW_PATH mais son chemin est vide ou terminé !");
+                    plan();  // Essaie de replanifier un chemin si possible
+                }
             }
+
 
 
 
@@ -484,9 +516,16 @@ public class Vehicle {
     }
 
     private double computeDynamicBrakingDistance(Lane lane) {
+        double base = switch (mode) {
+            case CAR -> 20.0;
+            case PUBLIC_TRANSPORT -> 18.0;
+            case BIKE -> 10.0;
+            case WALK -> 5.0;
+        };
         double speed = lane.getVehicleSpeed(this);
-        return Math.max(5.0, speed / 4.0);
+        return Math.max(base, speed / 3.0); // Plus prudent
     }
+
 
     // === Getters ===
     public Position getPosition() { return position; }
@@ -521,6 +560,14 @@ public class Vehicle {
         return pathColor;
     }
     private void moveTowardsTarget(Position target, double speedMultiplier) {
+        if (target != null && position.distanceTo(target) < 0.5) {
+            if (nextWaypointIdx + 1 < path.size()) {
+                nextWaypointIdx++;
+                target = path.get(nextWaypointIdx);
+                System.out.println("➡️ Arrivé au waypoint, avance au suivant !");
+            }
+        }
+        // 🛑 Avant tout, si très proche du waypoint => avance au suivant
         if (changingDirection) {
             // Mouvement vertical pur
             double stepY = speedMultiplier * speedFactor * 1.5 * verticalDirection;
@@ -543,6 +590,7 @@ public class Vehicle {
             return;
         }
 
+
         double dx = target.getX() - position.getX();
         double dy = target.getY() - position.getY();
 
@@ -562,6 +610,15 @@ public class Vehicle {
                 }
             } else {
                 System.out.println("⏳ Attente cooldown avant nouveau changement de voie...");
+            }
+        }
+
+        Vehicle vehicleAhead = currentLane.getVehicleAhead(this);
+        if (vehicleAhead != null) {
+            double distanceToVehicle = vehicleAhead.getPreciseX() - this.preciseX;
+            if (distanceToVehicle > 0 && distanceToVehicle < 10) {
+                System.out.println("🚦 V" + id + " stoppe car véhicule devant à " + distanceToVehicle + "m !");
+                return;
             }
         }
 
@@ -605,6 +662,20 @@ public class Vehicle {
     public boolean isChangingDirection() {
         return changingDirection;
     }
+
+    private static String randomWeather() {
+        String[] weathers = {"Sunny", "Cloudy", "Rainy"};
+        return weathers[new Random().nextInt(weathers.length)];
+    }
+
+    private static boolean randomHealth() {
+        return new Random().nextBoolean();
+    }
+
+    private static boolean randomRushHour() {
+        return new Random().nextBoolean();
+    }
+
 
 
 
