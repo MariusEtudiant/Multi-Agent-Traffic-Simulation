@@ -7,6 +7,7 @@ Simulation d'un trafic urbain avec :
 - Raisonnement logique avec l'Interpreter Pattern.
 - Feux de circulation adaptatifs via MDP (Q-Learning / Value Iteration).
 - Interface graphique en JavaFX.
+- Système argumentation avec tweety project
 
 ## Fonctionnalités
 
