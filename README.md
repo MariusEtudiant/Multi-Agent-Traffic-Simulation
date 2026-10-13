@@ -1,43 +1,48 @@
-Multi-Agent Traffic Simulation with BDI Agents
-Project Overview
-A Java-based traffic simulator where autonomous vehicles (BDI agents) navigate urban environments using logical reasoning. Agents make decisions based on perceptions of traffic lights, obstacles, and other vehicles.
+# Multi-agent traffic simulation: BDI vehicles, MDP traffic lights, argumentation
 
+A Java traffic simulator (about 3,400 lines) where three decision techniques work together:
 
-Key Features
-BDI Architecture:
+- **Vehicles are BDI agents.** Each vehicle runs a belief–desire–intention cycle: it perceives
+  lights, obstacles and neighbouring vehicles (beliefs), weighs goals such as reaching its
+  destination or avoiding a collision (desires), and commits to actions: accelerate, brake,
+  change lane, stop (intentions). Conditions are written as logical formulas evaluated by an
+  interpreter (`AtomFormula`, `AndFormula`, `OrFormula`, `NotFormula`).
+- **Traffic lights are controlled by a Markov decision process.** The state is the light colour
+  × the traffic level (none, medium, heavy); traffic evolves through a Markov transition matrix.
+  The policy is solved by value iteration (γ = 0.8) and refined online with a Q-learning update.
+- **Each traveller chooses a transport mode by argumentation.** Arguments for and against car,
+  public transport, walking and cycling (weather, health, rush hour) form a Dung argumentation
+  framework, solved with the TweetyProject library under grounded, preferred, complete and
+  stable semantics, alongside a score-based decision.
+- **Routes are planned with Dijkstra** on the road graph.
 
-Beliefs: Environmental perceptions (traffic lights, obstacles)
+A JavaFX interface animates the scenarios: a two-lane road with a light, intersections,
+obstacles, free-flow and congested traffic. Each vehicle records its travel time, lane changes
+and frustration (time blocked).
 
-Desires: Goals (reach destination, avoid collisions)
+## Architecture
 
-Intentions: Actions (accelerate, turn, stop)
+![UML class diagram](src/main/resources/FinalUmlDiagram.svg)
 
-Logical Reasoning: Interpreter Pattern for evaluating traffic conditions
+| Package | Content |
+|---|---|
+| `agent` | `Vehicle` (BDI cycle), `BeliefInitial`, `Desire`, `Intention`, `Goal` |
+| `logic` | Interpreter for logical formulas used in beliefs and plans |
+| `environment` | `Road`, `Lane`, `TrafficLight` (MDP), `TransitionMatrix`, `IntersectionController`, `Obstacle` |
+| `planning` | Road graph and Dijkstra |
+| `ArgumentationDM` | `TransportationAgent` (Dung framework, TweetyProject), `DungGraphPanel` (graph view) |
+| `gui` | `TrafficSimulatorApp` (JavaFX) |
 
-Implementation
-Core BDI components: Vehicle, BeliefInitial, Desire, Intention
+## Run
 
-Logical formulas: AndFormula, NotFormula, AtomFormula
+Requirements: Java 21, JavaFX 24 and the TweetyProject jars in `lib/` (see `run.bat`).
 
-Environment: Lane, Road, TrafficLight classes
+```bash
+run.bat                                   # compiles and launches the JavaFX simulator
+```
 
-How to Run
-Clone repository https://github.com/MariusEtudiant/Multi-Agent-Traffic-Simulation.git
+`Main.java` runs the console scenarios (`runScenario1` to `runScenario4`) and a batch of 100
+transport-mode decisions.
 
-Copy
-exucute the main file main.java which contain all implémentation of the scenario, change as you want to test it 
-
-Scenarios Tested
-Free-flow traffic
-
-Congested traffic
-
-Results Analysis
-Travel time efficiency
-
-Collision avoidance rate
-
-Lane change average
-
-Report
-Includes full system design, UML diagrams, code explanation, and experimental results.
+The design, UML diagrams and experiments are described in the course report (French):
+[`MARIUS_CASAMIAN_cm22205773_planifReport.pdf`](MARIUS_CASAMIAN_cm22205773_planifReport.pdf).
