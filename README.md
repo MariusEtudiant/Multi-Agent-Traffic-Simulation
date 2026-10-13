@@ -20,6 +20,28 @@ A JavaFX interface animates the scenarios: a two-lane road with a light, interse
 obstacles, free-flow and congested traffic. Each vehicle records its travel time, lane changes
 and frustration (time blocked).
 
+## Preview
+
+**The simulation.** Vehicles (blue) drive towards a traffic light (the red disc) on a two-lane
+road with obstacles (red squares). Orange lines are the routes planned with Dijkstra, including
+the lane changes that avoid the obstacles; green segments point to each vehicle's next waypoint.
+
+![Two-lane road with vehicles, obstacles, a traffic light and planned routes](docs/simulation_road.png)
+
+<table>
+<tr>
+<td width="38%"><img src="docs/lane_traffic_chart.png" alt="Number of vehicles on each lane over time"></td>
+<td><img src="docs/dung_argumentation_graph.png" alt="Dung argumentation graph for the choice of transport mode"></td>
+</tr>
+<tr>
+<td><b>Vehicles on each lane over time</b>, updated live in the interface: each lane change shows
+as the two curves moving in opposite directions.</td>
+<td><b>Choice of transport mode by argumentation.</b> Each node is an argument for a mode
+(public transport, car, bike, walking) or against it; arrows are attacks. Filled nodes are
+accepted under the chosen semantics, empty ones are defeated.</td>
+</tr>
+</table>
+
 ## Architecture
 
 ![UML class diagram](src/main/resources/FinalUmlDiagram.svg)
